@@ -33,8 +33,8 @@ class OSC{
         void OSC_BufferFill(uint8_t HalfFlag);
         void OSC_Accmulate(void);
         void OSC_StepCalculate(void);
-        void OSC_FM(uint16_t* pCoeff, uint16_t Max);
-        float OSC_AM(uint16_t* pCoeff, uint16_t Max);
+        void OSC_FM(uint16_t Max);
+        float OSC_AM(uint16_t Max);
         uint16_t OSC_Lerp(void); // 线性插值
 };
 
