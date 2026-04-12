@@ -1,25 +1,25 @@
-#include "OSC.H"
 #include "OSC.h"
 
 #include "main.h"
+#include "tim.h"
 #include "stm32f407xx.h"
 
+#include <cstdint>
 #include <stdint.h>
 #include <math.h>
 
 #include "../WaveForm/WaveForm.h"
 #include "./OSC.h"
+#include "../System/Knob/Knob.h"
 #include "stm32f4xx_hal_adc.h"
-
-extern uint16_t ADC_Buffer[4];
 
 /* ---- 振荡器 ---- */
 void OSC::OSC_Init(void){
-    this->WaveForm  = SineWave;
+    this->WaveForm  = (uint16_t *)WaveFormList[0];
     this->PhaseFlag = 0;
 
-    this->FM_Coeff = &ADC_Buffer[0];
-    this->AM_Coeff = &ADC_Buffer[1];
+    this->FM_Coeff = &ADC_BufferProcessed[0];
+    this->AM_Coeff = &ADC_BufferProcessed[1];
 
     this->TargetFreq = 144.0f;
     this->ActualFreq = this->TargetFreq;
@@ -28,7 +28,7 @@ void OSC::OSC_Init(void){
 
 void OSC::OSC_StepCalculate(){
     this->Step = this->ActualFreq * FM_CONSTANT;
-    this->OSC_FM(4096);
+    this->OSC_FM(CAPTURE_UPPER_LIMIT);
 }
 
 void OSC::OSC_BufferFill(uint8_t HalfFlag){
@@ -36,12 +36,13 @@ void OSC::OSC_BufferFill(uint8_t HalfFlag){
     uint16_t* Start = (HalfFlag == 0) ? &this->Buffer[0] : &this->Buffer[HALF_BUFFER_LENGTH];
     
     for(int i = 0 ; i < HALF_BUFFER_LENGTH ; i ++){
-        Start[i] = this->OSC_Lerp() * this->OSC_AM(4096);
+        Start[i] = this->OSC_Lerp() * this->OSC_AM(CAPTURE_UPPER_LIMIT);
         this->OSC_Accmulate();
     }
     
     if (HalfFlag) {
         this->OSC_StepCalculate();
+        this->OSC_WaveFormSelect(__HAL_TIM_GET_COUNTER(&htim3));
     }
 }
 
@@ -80,6 +81,10 @@ float OSC::OSC_AM(uint16_t Max){
     return (float)TemporaryValue / (float)Max;
 }
 
+void OSC::OSC_WaveFormSelect(uint8_t WaveFormIndex){
+    this->WaveForm = (uint16_t *)WaveFormList[WaveFormIndex];
+}
+
 OSC OSC1;
 
 void OSCGeneralInit(){
@@ -98,11 +103,4 @@ void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef *hdac) // 处理 Buffer [
 void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac) // 处理 Buffer [256~511]
 {
     OSC1.OSC_BufferFill(1);
-}
-
-/* ---- ADC捕获 ---- */
-void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
-    if (hadc->Instance == ADC1) {
-
-    }
 }

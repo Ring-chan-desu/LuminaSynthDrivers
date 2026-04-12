@@ -1,25 +1,28 @@
 #ifndef __WAVEFORM_H__
 #define __WAVEFORM_H__
 
-/* --- System & Library Includes --- */
+/* --- 1. 通用头文件包含与宏定义 --- */
 #include "main.h"
+#include <stdint.h>
+
+#define WAVEFORM_COUNT 3 // 波表个数
 
 #ifdef __cplusplus
-/* C++ Class Definitions (C++ Only) */
+/* --- 2. 仅 C++ 可见的类定义 --- */
 
 
+/* 开启 C 兼容接口定义 */
 extern "C" {
 #endif
 
-/* --- C-Compatible Macro & Type Definitions --- */
+/* --- 3. C/C++ 通用类型声明 --- */
 
 
-/* --- Public C API (Callable from C or C++) --- */
-// const float SineWave[1024];
-extern uint16_t SineWave[1024];
+/* --- 4. 供 C 调用的公开 API (Wrapper) --- */
+extern const uint16_t* WaveFormList[WAVEFORM_COUNT];
 
 #ifdef __cplusplus
-}
+} // 结束 extern "C"
 #endif
 
 #endif /* __WAVEFORM_H__ */

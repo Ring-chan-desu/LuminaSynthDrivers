@@ -3,6 +3,10 @@
 
 /* --- 1. 通用头文件包含与宏定义 --- */
 #include "main.h"
+
+#include "../System/Knob/Knob.h"
+#include "../WaveForm/WaveForm.h"
+
 #include <stdint.h>
 
 #define SAMPLE_RATE             48000           // 采样率
@@ -15,7 +19,7 @@
 /* --- 2. 仅 C++ 可见的类定义 --- */
 class OSC{
     public:
-        uint16_t *WaveForm;
+        uint16_t* WaveForm;
         uint16_t Buffer[FULL_BUFFER_LENGTH];
 
         uint16_t* FM_Coeff;
@@ -30,9 +34,13 @@ class OSC{
         float Step;
 
         void OSC_Init(void);
+        
         void OSC_BufferFill(uint8_t HalfFlag);
         void OSC_Accmulate(void);
         void OSC_StepCalculate(void);
+
+        void OSC_WaveFormSelect(uint8_t WaveFormIndex);
+
         void OSC_FM(uint16_t Max);
         float OSC_AM(uint16_t Max);
         uint16_t OSC_Lerp(void); // 线性插值

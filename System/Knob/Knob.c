@@ -2,6 +2,8 @@
 
 #include "main.h"
 #include "adc.h"
+#include "stm32f407xx.h"
+#include "tim.h"
 
 #include <stdint.h>
 
@@ -24,7 +26,9 @@ void Knob_DeadZoneProcess(uint16_t* pSource, uint16_t* pValue, uint16_t CaptureM
 void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
     if (hadc->Instance == ADC1) {
         for (int i = 0; i < ADC_CHANNEL_COUNT; i++) {
+            // 等后面安装上了 CMSIS DSP 库再改成 arm_clip_q15
             Knob_DeadZoneProcess(&ADC_Buffer[i], &ADC_BufferProcessed[i], CAPTURE_LOWER_LIMIT, CAPTURE_UPPER_LIMIT);
+            // arm_clip_q15((q15_t*)ADC_Buffer, (q15_t*)ADC_BufferProcessed, CAPTURE_LOWER_LIMIT, CAPTURE_UPPER_LIMIT, ADC_CHANNEL_COUNT);
         }
     }
 }
