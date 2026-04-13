@@ -1,9 +1,10 @@
-#include "Knob.h"
+#include "./Knob.h"
 
 #include "main.h"
 #include "adc.h"
 #include "stm32f407xx.h"
 #include "tim.h"
+#include "arm_math.h"
 
 #include <stdint.h>
 
