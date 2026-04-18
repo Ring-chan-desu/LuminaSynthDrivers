@@ -200,3 +200,32 @@ color ILI9341V_HexColorToOctValue(char* String)
 
     return ResultColor;
 }
+
+/**
+ * @brief 绘制100*100单色矩形测试函数
+ * * @param StartX 左下角起始横坐标
+ * @param StartY 左下角起始纵坐标
+ * @param HexColor 十六进制颜色字符串 (如 "#FF0000")
+ */
+void ILI9341V_DrawTestRect(uint16_t StartX, uint16_t StartY, char* HexColor)
+{
+    // 定义矩形范围（100*100）
+    point StartPoint = {StartX, StartY};
+    point EndPoint = {StartX + 99, StartY + 99};
+
+    // 转换颜色为RGB565格式
+    color RectColor = ILI9341V_HexColorToOctValue(HexColor);
+
+    // 设置屏幕填充区域
+    ILI9341V_SetRange(StartPoint, EndPoint);
+
+    // 发送开始写显存指令
+    ILI9341V_WriteCommand(0x2C);
+
+    // 循环填充像素数据
+    for (uint32_t i = 0; i < 100 * 100; i++)
+    {
+        ILI9341V_WriteData(RectColor.HighBits);
+        ILI9341V_WriteData(RectColor.LowBits);
+    }
+}

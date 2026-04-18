@@ -44,4 +44,6 @@ void ILI9341V_SetRange(point StartPoint, point Endpoint);
 uint8_t ILI9341V_HexCharToOctValue(char Character);
 color ILI9341V_HexColorToOctValue(char* String);
 
+void ILI9341V_DrawTestRect(uint16_t StartX, uint16_t StartY, char* HexColor);
+
 #endif
