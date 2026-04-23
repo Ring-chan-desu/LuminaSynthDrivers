@@ -4,10 +4,7 @@
 /* --- 1. 通用头文件包含与宏定义 --- */
 #include "main.h"
 
-#define CAPTURE_UPPER_LIMIT 4092      // 捕获下限值
-#define CAPTURE_LOWER_LIMIT 32    // 捕获上限值
 
-#define ADC_CHANNEL_COUNT 4 
 #ifdef __cplusplus
 /* --- 2. 仅 C++ 可见的类定义 --- */
 

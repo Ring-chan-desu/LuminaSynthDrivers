@@ -4,8 +4,7 @@
 /* --- 1. 通用头文件包含与宏定义 --- */
 #include "main.h"
 #include <stdint.h>
-
-#define WAVEFORM_COUNT 3 // 波表个数
+#include "../System/Interface/Lumina_Interface.h"
 
 #ifdef __cplusplus
 /* --- 2. 仅 C++ 可见的类定义 --- */

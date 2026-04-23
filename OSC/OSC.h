@@ -3,26 +3,34 @@
 
 /* --- 1. 通用头文件包含与宏定义 --- */
 #include "main.h"
+#include "dac.h"
 
+#include "../System/Interface/Lumina_Interface.h"
+#include "../System/Mediator/Mediator.h"
 #include "../System/Knob/Knob.h"
 #include "../WaveForm/WaveForm.h"
 
 #include <stdint.h>
 
-#define SAMPLE_RATE             48000           // 采样率
-#define WAVEFORM_LENGTH         1024            // 波表长度
-#define HALF_BUFFER_LENGTH      256             // 半缓冲区长度
-#define FULL_BUFFER_LENGTH      512             // 全缓冲区长度
-#define FM_CONSTANT             0.021333333f    // 调频常量 (1024 / 48000)
+
 
 #ifdef __cplusplus
 /* --- 2. 仅 C++ 可见的类定义 --- */
-class OSC{
+class OSC : public Subscriber {
+    private:
+        Mediator* m = 0;
+
     public:
+        // 1. 冒号后面是【初始化列表】，只负责给变量赋值
+        OSC(Mediator* Med) : m(Med) 
+        {
+
+        }
+
         uint16_t* WaveForm;
         uint16_t Buffer[FULL_BUFFER_LENGTH];
 
-        uint16_t* FM_Coeff;
+        uint16_t FM_Coeff;
         uint16_t* AM_Coeff;
 
         uint16_t Index;
@@ -32,6 +40,12 @@ class OSC{
         float TargetFreq;
         float ActualFreq;
         float Step;
+
+        void Subscriber_Update(Topics t, float value) override{
+            if (t == Topics::OSC_FM) {
+                this->FM_Coeff = (uint16_t)value;
+            }
+        }
 
         void OSC_Init(void);
         

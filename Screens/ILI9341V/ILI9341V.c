@@ -80,6 +80,7 @@ void ILI9341V_Clear()
     ILI9341V_SetRange(TempStartpoint, TempEndpoint);
 
     ILI9341V_WriteCommand(0x2C); // 写数据指令
+    
     for (uint16_t width = 1 ; width <= 320 ; width ++)
     {
         

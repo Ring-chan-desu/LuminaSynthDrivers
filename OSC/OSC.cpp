@@ -8,8 +8,10 @@
 #include <stdint.h>
 #include <math.h>
 
-#include "../WaveForm/WaveForm.h"
 #include "./OSC.h"
+#include "../System/Interface/Lumina_Interface.h"
+#include "../System/Mediator/Mediator.h"
+#include "../WaveForm/WaveForm.h"
 #include "../System/Knob/Knob.h"
 #include "stm32f4xx_hal_adc.h"
 
@@ -18,12 +20,17 @@ void OSC::OSC_Init(void){
     this->WaveForm  = (uint16_t *)WaveFormList[0];
     this->PhaseFlag = 0;
 
-    this->FM_Coeff = &ADC_BufferProcessed[0];
+    // this->FM_Coeff = &ADC_BufferProcessed[0]; // 没有适配中转站的旧参数
+    this->FM_Coeff = 0;
     this->AM_Coeff = &ADC_BufferProcessed[1];
 
     this->TargetFreq = 144.0f;
     this->ActualFreq = this->TargetFreq;
     this->Step = 9.386667f;
+
+    if (m != nullptr) {
+        m->Mediator_Subscribe(Topics::OSC_FM, this); // 在这里订阅！
+    }
 }
 
 void OSC::OSC_StepCalculate(){
@@ -72,7 +79,7 @@ uint16_t OSC::OSC_Lerp(){
 
 // FM 和 AM 的实现方法趋同,但是调用方法不同,所引用的数据存储方式位置和结构都不同,有待修改.
 void OSC::OSC_FM(uint16_t Max){
-    uint16_t TemporaryValue = *(this->FM_Coeff);
+    uint16_t TemporaryValue = this->FM_Coeff;
     this->ActualFreq = this->TargetFreq + (this->TargetFreq * (float)TemporaryValue / (float)Max);
 }
 
@@ -85,7 +92,8 @@ void OSC::OSC_WaveFormSelect(uint8_t WaveFormIndex){
     this->WaveForm = (uint16_t *)WaveFormList[WaveFormIndex];
 }
 
-OSC OSC1;
+OSC OSC1(&MediatorTest);
+// OSC OSC1;
 
 void OSCGeneralInit(){
     OSC1.OSC_Init();
@@ -104,3 +112,4 @@ void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac) // 处理 Buffer [256~
 {
     OSC1.OSC_BufferFill(1);
 }
+// RTOS任务待补充
