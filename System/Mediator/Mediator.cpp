@@ -1,3 +1,3 @@
 #include "Mediator.h"
 
-Mediator MediatorTest;
+// Mediator MediatorTest;

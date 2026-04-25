@@ -92,8 +92,8 @@ void OSC::OSC_WaveFormSelect(uint8_t WaveFormIndex){
     this->WaveForm = (uint16_t *)WaveFormList[WaveFormIndex];
 }
 
-// static OSC OSC1(&(Mediator::GetInstance()));
-static OSC OSC1(&MediatorTest);
+static OSC OSC1(&(Mediator::GetInstance()));
+// OSC OSC1(&MediatorTest);
 // OSC OSC1;
 
 void OSCGeneralInit(){

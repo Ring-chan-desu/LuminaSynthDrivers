@@ -6,7 +6,8 @@
 // #include "../Knob/Knob.h"
 
 void Lumina_Interface_Init(void) {
-    // Mediator::GetInstance();
+    Mediator::GetInstance();
+    // static OSC OSC1(&(Mediator::GetInstance()));
     OSCGeneralInit();
 }
 

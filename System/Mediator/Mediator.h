@@ -30,14 +30,14 @@ class Subscriber
 class Mediator
 {
     private:
-        etl::map<Topics, etl::vector<Subscriber*, 10>, 10> SubscribersMap;
-        // Mediator() {}   //  单例一定要有私有的构造函数,不然会报错
+        etl::map<Topics, etl::vector<Subscriber*, 2>, 2> SubscribersMap;
+        Mediator() {}   //  单例一定要有私有的构造函数,不然会报错
     public:
-        // static Mediator& GetInstance() {    //  麦耶斯单例
-        //     static Mediator Instance;   //  调用这个函数的时候才开始初始化,用的就是类私有的构造函数在内存中预留空间给实例
-        //     return Instance;
-        //     //  返回当前实例引用,可以通过这个函数访问,比如说 Mediator::GetInstance().Attribute = value;
-        // }
+        static Mediator& GetInstance() {    //  麦耶斯单例
+            static Mediator Instance;   //  调用这个函数的时候才开始初始化,用的就是类私有的构造函数在内存中预留空间给实例
+            return Instance;
+            //  返回当前实例引用,可以通过这个函数访问,比如说 Mediator::GetInstance().Attribute = value;
+        }
 
         void Mediator_Subscribe(Topics topic, Subscriber* subscriber){
             SubscribersMap[topic].push_back(subscriber);
@@ -59,8 +59,8 @@ class Mediator
             }
         }
 
-        // Mediator(const Mediator&) = delete; //  禁用拷贝构造函数
-        // Mediator& operator = (const Mediator&) = delete;    //  禁用赋值操作符
+        Mediator(const Mediator&) = delete; //  禁用拷贝构造函数
+        Mediator& operator = (const Mediator&) = delete;    //  禁用赋值操作符
 };
 
 extern Mediator MediatorTest;

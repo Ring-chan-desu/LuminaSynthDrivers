@@ -20,7 +20,7 @@
     #define WAVEFORM_COUNT  3    // 波表个数
 
 /* ---- 2. C/C++ 通用类型声明 ---- */
-
+// extern OSC
 
 #ifdef __cplusplus
 /* ---- 3. 仅 C++ 可见的类定义 ---- */
