@@ -34,7 +34,6 @@ void HAL_ADC_ConvCpltCallback(ADC_HandleTypeDef* hadc) {
             // 等后面安装上了 CMSIS DSP 库再改成 arm_clip_q15
             Knob_DeadZoneProcess(&ADC_Buffer[i], &ADC_BufferProcessed[i], CAPTURE_LOWER_LIMIT, CAPTURE_UPPER_LIMIT);
             // arm_clip_q15((q15_t*)ADC_Buffer, (q15_t*)ADC_BufferProcessed, CAPTURE_LOWER_LIMIT, CAPTURE_UPPER_LIMIT, ADC_CHANNEL_COUNT);
-            MediatorTest.Mediator_Publish(Topics::OSC_FM, ADC_BufferProcessed[3]);
         }
     }
 }

@@ -17,7 +17,7 @@
 #ifdef __cplusplus
 /* --- 2. 仅 C++ 可见的类定义 --- */
 class OSC : public Subscriber {
-    private:
+    private: // 参数名m待修改
         Mediator* m = 0;
 
     public:
