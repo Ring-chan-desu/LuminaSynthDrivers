@@ -16,22 +16,6 @@
 #include "stm32f4xx_hal_adc.h"
 
 /* ---- 振荡器 ---- */
-void OSC::OSC_Init(void){
-    this->WaveForm  = (uint16_t *)WaveFormList[0];
-    this->PhaseFlag = 0;
-
-    // this->FM_Coeff = &ADC_BufferProcessed[0]; // 没有适配中转站的旧参数
-    this->FM_Coeff = 0;
-    this->AM_Coeff = &ADC_BufferProcessed[1];
-
-    this->TargetFreq = 144.0f;
-    this->ActualFreq = this->TargetFreq;
-    this->Step = 9.386667f;
-
-    if (m != nullptr) {
-        m->Mediator_Subscribe(Topics::OSC_FM, this); // 在这里订阅！
-    }
-}
 
 void OSC::OSC_StepCalculate(){
     this->Step = this->ActualFreq * FM_CONSTANT;
@@ -95,10 +79,6 @@ void OSC::OSC_WaveFormSelect(uint8_t WaveFormIndex){
 static OSC OSC1(&(Mediator::GetInstance()));
 // OSC OSC1(&MediatorTest);
 // OSC OSC1;
-
-void OSCGeneralInit(){
-    OSC1.OSC_Init();
-}
 
 /* ---- DAC输出 ---- */
 uint16_t *OutBuffer = OSC1.Buffer; // 此处将OSC1的缓冲区直接链接至输出缓冲区

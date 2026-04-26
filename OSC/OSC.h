@@ -22,9 +22,21 @@ class OSC : public Subscriber {
 
     public:
         // 1. 冒号后面是【初始化列表】，只负责给变量赋值
-        OSC(Mediator* Med) : m(Med) 
+        OSC(Mediator* Med)
+        :   m(Med),
+            WaveForm((uint16_t*)WaveFormList[0]),
+            FM_Coeff(0),
+            AM_Coeff(&ADC_BufferProcessed[1]),
+            Index(0),
+            PhaseFlag(0),
+            Accmulation(0.0f),
+            TargetFreq(144.0f),
+            ActualFreq(this->TargetFreq),
+            Step(9.386667f)
         {
-
+            if (m != nullptr) {
+                m->Mediator_Subscribe(Topics::OSC_FM, this); // 在这里订阅！
+            }
         }
 
         uint16_t* WaveForm;
