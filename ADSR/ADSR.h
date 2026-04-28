@@ -33,7 +33,7 @@ class ADSR{
         float ADSR_Step = 0.0f;
 
         float ADSR_LineGenerate(float x1, float y1, float x2, float y2, float x);
-        float ADSR_FunctionValueCalculate(ADSR_Point p2, ADSR_Point p3, ADSR_Point p4, float x);
+        float ADSR_FunctionValueCalculate(float x);
 
 };
 

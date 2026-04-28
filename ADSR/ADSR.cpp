@@ -36,28 +36,28 @@ float ADSR::ADSR_LineGenerate(float x1, float y1, float x2, float y2, float x) {
  * @param x  当前的横坐标 (时间轴)
  * @return 对应的纵坐标函数值 (幅度)
  */
-float ADSR::ADSR_FunctionValueCalculate(ADSR_Point p2, ADSR_Point p3, ADSR_Point p4, float x)
+float ADSR::ADSR_FunctionValueCalculate(float x)
 {  
-    // 1. Attack 阶段：从原点 (0,0) 到 p2
-    if(x >= 0.0f && x < p2.x)
+    // 1. Attack 阶段：从原点 (0,0) 到 this->p2
+    if(x >= 0.0f && x < this->p2.x)
     {
-        return this->ADSR_LineGenerate(0.0f, 0.0f, p2.x, p2.y, x);
+        return this->ADSR_LineGenerate(0.0f, 0.0f, this->p2.x, this->p2.y, x);
     }
-    // 2. Decay 阶段：从 p2 到 p3
-    else if(x >= p2.x && x < p3.x)
+    // 2. Decay 阶段：从 this->p2 到 this->p3
+    else if(x >= this->p2.x && x < this->p3.x)
     {
-        return this->ADSR_LineGenerate(p2.x, p2.y, p3.x, p3.y, x);
+        return this->ADSR_LineGenerate(this->p2.x, this->p2.y, this->p3.x, this->p3.y, x);
     }
-    // 3. Sustain 阶段：从 p3 到 p4
-    // 注：在你的逻辑中，p3 到 p4 实际上是维持或释放前的过渡
-    else if(x >= p3.x && x < p4.x)
+    // 3. Sustain 阶段：从 this->p3 到 this->p4
+    // 注：在你的逻辑中，this->p3 到 this->p4 实际上是维持或释放前的过渡
+    else if(x >= this->p3.x && x < this->p4.x)
     {
-        return this->ADSR_LineGenerate(p3.x, p3.y, p4.x, p4.y, x);
+        return this->ADSR_LineGenerate(this->p3.x, this->p3.y, this->p4.x, this->p4.y, x);
     }
-    // 4. Release 阶段：从 p4 到 屏幕终点 (向 0 归集)
-    else if(x >= p4.x && x < (float)ADSR_WIDTH)
+    // 4. Release 阶段：从 this->p4 到 屏幕终点 (向 0 归集)
+    else if(x >= this->p4.x && x < (float)ADSR_WIDTH)
     {
-        return this->ADSR_LineGenerate(p4.x, p4.y, (float)ADSR_WIDTH, 0.0f, x);
+        return this->ADSR_LineGenerate(this->p4.x, this->p4.y, (float)ADSR_WIDTH, 0.0f, x);
     }
     // 5. 默认/越界情况
     else

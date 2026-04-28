@@ -19,6 +19,11 @@
     /* ---- Marcos From WaveForms ----*/    
     #define WAVEFORM_COUNT  3    // 波表个数
 
+    /* ---- Macros From ADSR ---- */
+    // #define ADSR_POINT_COUNT    3.0f       //  ADSR有效点数
+    #define ADSR_HEIGHT         100.0f     //  ADSR高度
+    #define ADSR_WIDTH          100.0f     //  ADSR宽度
+
 /* ---- 2. C/C++ 通用类型声明 ---- */
 // extern OSC
 
@@ -34,6 +39,8 @@ extern "C" {
 void Lumina_Interface_Init(void);
 
 uint32_t* Lumina_Interface_GetOutBuffer(void);
+
+float Lumina_Interface_ADSR_GetValue(float CurrentX);  //  测试函数
 #ifdef __cplusplus
 } // 结束 extern "C"
 #endif
