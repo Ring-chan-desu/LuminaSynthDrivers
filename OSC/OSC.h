@@ -81,7 +81,7 @@ extern "C" {
 
 /* --- 4. 供 C 调用的公开 API (Wrapper) --- */
 extern uint16_t *OutBuffer;
-void OSCGeneralInit();
+// void OSCGeneralInit();
 
 #ifdef __cplusplus
 } // 结束 extern "C"
