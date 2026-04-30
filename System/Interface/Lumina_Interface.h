@@ -20,7 +20,7 @@
     #define WAVEFORM_COUNT  3    // 波表个数
 
     /* ---- Macros From ADSR ---- */
-    // #define ADSR_POINT_COUNT    3.0f       //  ADSR有效点数
+    #define ADSR_POINT_COUNT    3          //  ADSR有效点数
     #define ADSR_HEIGHT         100.0f     //  ADSR高度
     #define ADSR_WIDTH          100.0f     //  ADSR宽度
 

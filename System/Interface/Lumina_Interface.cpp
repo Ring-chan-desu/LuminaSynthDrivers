@@ -6,8 +6,12 @@
 #include <stdint.h>
 // #include "../Knob/Knob.h"
 
+extern ADSR ADSR1;
+
 void Lumina_Interface_Init(void) {
     Mediator::GetInstance();
+    ADSR1.ADSR_Init();
+    // static ADSR ADSR1(&(Mediator::GetInstance()));
     // static OSC OSC1(&(Mediator::GetInstance()));
     // OSCGeneralInit();
 }
