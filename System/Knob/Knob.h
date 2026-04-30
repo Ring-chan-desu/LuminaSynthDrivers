@@ -18,7 +18,7 @@ extern "C" {
 
 /* --- 4. 供 C 调用的公开 API (Wrapper) --- */
 extern uint16_t ADC_Buffer[4];
-extern uint16_t ADC_BufferProcessed[4];
+extern float ADC_BufferProcessed[4];
 
 #ifdef __cplusplus
 } // 结束 extern "C"
