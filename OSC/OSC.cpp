@@ -27,7 +27,8 @@ void OSC::OSC_BufferFill(uint8_t HalfFlag){
     uint16_t* Start = (HalfFlag == 0) ? &this->Buffer[0] : &this->Buffer[HALF_BUFFER_LENGTH];
     
     for(int i = 0 ; i < HALF_BUFFER_LENGTH ; i ++){
-        Start[i] = this->OSC_Lerp() * this->OSC_AM(CAPTURE_UPPER_LIMIT);
+        // Start[i] = this->OSC_Lerp() * this->OSC_AM(CAPTURE_UPPER_LIMIT);
+        Start[i] = this->OSC_Lerp() * this->AM_Coeff;
         this->OSC_Accmulate();
     }
     
@@ -63,14 +64,15 @@ uint16_t OSC::OSC_Lerp(){
 
 // FM 和 AM 的实现方法趋同,但是调用方法不同,所引用的数据存储方式位置和结构都不同,有待修改.
 void OSC::OSC_FM(uint16_t Max){
-    uint16_t TemporaryValue = this->FM_Coeff;
-    this->ActualFreq = this->TargetFreq + (this->TargetFreq * (float)TemporaryValue / (float)Max);
+    // uint16_t TemporaryValue = this->FM_Coeff;
+    // this->ActualFreq = this->TargetFreq + (this->TargetFreq * (float)TemporaryValue / (float)Max);
+    this->ActualFreq = this->TargetFreq * (this->AM_Coeff + 1);
 }
 
-float OSC::OSC_AM(uint16_t Max){
-    uint16_t TemporaryValue = *(this->AM_Coeff);
-    return (float)TemporaryValue / (float)Max;
-}
+// float OSC::OSC_AM(uint16_t Max){
+//     uint16_t TemporaryValue = *(this->AM_Coeff);
+//     return (float)TemporaryValue / (float)Max;
+// }
 
 void OSC::OSC_WaveFormSelect(uint8_t WaveFormIndex){
     this->WaveForm = (uint16_t *)WaveFormList[WaveFormIndex];

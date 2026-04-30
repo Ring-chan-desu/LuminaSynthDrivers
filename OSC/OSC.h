@@ -26,7 +26,7 @@ class OSC : public Subscriber {
         :   m(Med),
             WaveForm((uint16_t*)WaveFormList[0]),
             FM_Coeff(0),
-            AM_Coeff(&ADC_BufferProcessed[1]),
+            AM_Coeff(0),
             Index(0),
             PhaseFlag(0),
             Accmulation(0.0f),
@@ -35,15 +35,15 @@ class OSC : public Subscriber {
             Step(9.386667f)
         {
             if (m != nullptr) {
-                m->Mediator_Subscribe(Topics::OSC_FM, this); // 在这里订阅！
+                m->Mediator_Subscribe(Topics::ADC_C7, this); // 在这里订阅！
             }
         }
 
         uint16_t* WaveForm;
         uint16_t Buffer[FULL_BUFFER_LENGTH];
 
-        uint16_t FM_Coeff;
-        uint16_t* AM_Coeff;
+        float FM_Coeff;
+        float AM_Coeff;
 
         uint16_t Index;
         uint8_t PhaseFlag;
@@ -54,8 +54,11 @@ class OSC : public Subscriber {
         float Step;
 
         void Subscriber_Update(Topics t, float value) override{
-            if (t == Topics::OSC_FM) {
+            if (t == Topics::ADC_C6) {  //  FM
                 this->FM_Coeff = (uint16_t)value;
+            }
+            if (t == Topics::ADC_C7) {  //  AM
+                this->AM_Coeff = (uint16_t)value;
             }
         }
 
