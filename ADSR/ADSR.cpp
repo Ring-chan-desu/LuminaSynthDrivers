@@ -126,3 +126,5 @@ void ADSR_Update_TaskInit(void)
     };
     ADSR_Update_TaskHandle = osThreadNew(ADSR_Update_Task, NULL, &ADSR_Update_TaskAttr);
 }
+
+//  这边四个旋钮的捕获丢到Knob.c文件里面去,谁弄得ADSR)

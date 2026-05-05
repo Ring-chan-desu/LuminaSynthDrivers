@@ -25,8 +25,8 @@ class OSC : public Subscriber {
         OSC(Mediator* Med)
         :   m(Med),
             WaveForm((uint16_t*)WaveFormList[0]),
-            FM_Coeff(0),
-            AM_Coeff(0),
+            FM_Coeff(0.0f),
+            AM_Coeff(1.0f),
             Index(0),
             PhaseFlag(0),
             Accmulation(0.0f),
@@ -35,6 +35,7 @@ class OSC : public Subscriber {
             Step(9.386667f)
         {
             if (m != nullptr) {
+                m->Mediator_Subscribe(Topics::ADC_C6, this); // 在这里订阅！
                 m->Mediator_Subscribe(Topics::ADC_C7, this); // 在这里订阅！
             }
         }
@@ -55,10 +56,10 @@ class OSC : public Subscriber {
 
         void Subscriber_Update(Topics t, float value) override{
             if (t == Topics::ADC_C6) {  //  FM
-                this->FM_Coeff = (uint16_t)value;
+                this->FM_Coeff = value;
             }
             if (t == Topics::ADC_C7) {  //  AM
-                this->AM_Coeff = (uint16_t)value;
+                this->AM_Coeff = value;
             }
         }
 
@@ -74,7 +75,6 @@ class OSC : public Subscriber {
         float OSC_AM(uint16_t Max);
         uint16_t OSC_Lerp(void); // 线性插值
 };
-
 /* 开启 C 兼容接口定义 */
 extern "C" {
 #endif
@@ -83,7 +83,7 @@ extern "C" {
 
 
 /* --- 4. 供 C 调用的公开 API (Wrapper) --- */
-extern uint16_t *OutBuffer;
+
 // void OSCGeneralInit();
 
 #ifdef __cplusplus

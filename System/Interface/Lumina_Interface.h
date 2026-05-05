@@ -12,7 +12,7 @@
     #define FM_CONSTANT             0.021333333f    // 调频常量 (1024 / 48000)
 
     /* ---- Marcos From Knobs ----*/
-    #define CAPTURE_UPPER_LIMIT 4092        // 捕获下限值
+    #define CAPTURE_UPPER_LIMIT 4060        // 捕获下限值
     #define CAPTURE_LOWER_LIMIT 32          // 捕获上限值
     #define ADC_CHANNEL_COUNT   4           // ADC 通道数
 
@@ -38,7 +38,7 @@ extern "C" {
 /* ---- 4. 供 C 调用的公开 API (Wrapper) ---- */
 void Lumina_Interface_Init(void);
 
-uint32_t* Lumina_Interface_GetOutBuffer(void);
+uint16_t* Lumina_Interface_GetOutBuffer(void);
 
 float Lumina_Interface_ADSR_GetValue(float CurrentX);  //  测试函数
 #ifdef __cplusplus

@@ -66,7 +66,7 @@ uint16_t OSC::OSC_Lerp(){
 void OSC::OSC_FM(uint16_t Max){
     // uint16_t TemporaryValue = this->FM_Coeff;
     // this->ActualFreq = this->TargetFreq + (this->TargetFreq * (float)TemporaryValue / (float)Max);
-    this->ActualFreq = this->TargetFreq * (this->AM_Coeff + 1);
+    this->ActualFreq = this->TargetFreq + (this->TargetFreq * this->FM_Coeff);
 }
 
 // float OSC::OSC_AM(uint16_t Max){
@@ -78,21 +78,12 @@ void OSC::OSC_WaveFormSelect(uint8_t WaveFormIndex){
     this->WaveForm = (uint16_t *)WaveFormList[WaveFormIndex];
 }
 
-static OSC OSC1(&(Mediator::GetInstance()));
+
 // OSC OSC1(&MediatorTest);
 // OSC OSC1;
 
-/* ---- DAC输出 ---- */
-uint16_t *OutBuffer = OSC1.Buffer; // 此处将OSC1的缓冲区直接链接至输出缓冲区
+// /* ---- DAC输出 ---- */
+// uint16_t *OutBuffer = OSC1.Buffer; // 此处将OSC1的缓冲区直接链接至输出缓冲区
 
-/* ---- 回调部分 ---- */
-void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef *hdac) // 处理 Buffer [0~255]
-{
-    OSC1.OSC_BufferFill(0);
-}
 
-void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac) // 处理 Buffer [256~511]
-{
-    OSC1.OSC_BufferFill(1);
-}
 // RTOS任务待补充
