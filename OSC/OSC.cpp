@@ -34,7 +34,7 @@ void OSC::OSC_BufferFill(uint8_t HalfFlag){
     
     if (HalfFlag) {
         this->OSC_StepCalculate();
-        this->OSC_WaveFormSelect(__HAL_TIM_GET_COUNTER(&htim3));
+        // this->OSC_WaveFormSelect(__HAL_TIM_GET_COUNTER(&htim3));    //  编码器给ban了,暂时注释掉
     }
 }
 

@@ -30,7 +30,7 @@ class OSC : public Subscriber {
             Index(0),
             PhaseFlag(0),
             Accmulation(0.0f),
-            TargetFreq(144.0f),
+            TargetFreq(440.0f),
             ActualFreq(this->TargetFreq),
             Step(9.386667f)
         {
@@ -41,7 +41,7 @@ class OSC : public Subscriber {
         }
 
         uint16_t* WaveForm;
-        uint16_t Buffer[FULL_BUFFER_LENGTH];
+        uint16_t Buffer[FULL_BUFFER_LENGTH];    //  uint16_t
 
         float FM_Coeff;
         float AM_Coeff;

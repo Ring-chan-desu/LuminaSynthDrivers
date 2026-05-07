@@ -20,20 +20,31 @@ void Lumina_Interface_Init(void) {
 }
 
 extern "C" uint16_t* Lumina_Interface_GetOutBuffer(void) {
-    return &(OSC1.Buffer[0]);
+    return &(OSC1.Buffer[0]);   //  临时值
 }
 
 float Lumina_Interface_ADSR_GetValue(float CurrentX) {
     return ADSR1.ADSR_FunctionValueCalculate(CurrentX);
 }
 
-/* ---- 回调部分 ---- */
+/* ---- DAC回调部分 ---- */
 void HAL_DAC_ConvHalfCpltCallbackCh1(DAC_HandleTypeDef *hdac) // 处理 Buffer [0~255]
 {
     OSC1.OSC_BufferFill(0);
 }
 
 void HAL_DAC_ConvCpltCallbackCh1(DAC_HandleTypeDef *hdac) // 处理 Buffer [256~511]
+{
+    OSC1.OSC_BufferFill(1);
+}
+
+/* ---- I2S 回调部分 ---- */
+void HAL_I2S_TxHalfCpltCallback(I2S_HandleTypeDef *hi2s) // 处理 Buffer 前半部分
+{
+    OSC1.OSC_BufferFill(0);
+}
+
+void HAL_I2S_TxCpltCallback(I2S_HandleTypeDef *hi2s) // 处理 Buffer 后半部分
 {
     OSC1.OSC_BufferFill(1);
 }
