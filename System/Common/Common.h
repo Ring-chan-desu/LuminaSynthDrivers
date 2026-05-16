@@ -1,0 +1,36 @@
+#ifndef __COMMON_H__
+#define __COMMON_H__
+
+/* ---- 1. 通用驱动头文件 ---- */
+#include "FreeRTOS.h"
+#include "cmsis_os2.h"
+#include "cmsis_os.h"
+#include "task.h"
+#include "main.h"
+#include "stm32f407xx.h"
+
+/* ---- 2. 标准类型定义 ---- */
+#include <stdint.h>
+#include <stdbool.h>
+
+/* ---- 3. 项目共用宏定义 ---- */
+#define SAMPLE_RATE             48000           // 采样率
+#define WAVEFORM_LENGTH         1024            // 波表长度
+#define HALF_BUFFER_LENGTH      256             // 半缓冲区长度
+#define FULL_BUFFER_LENGTH      512             // 全缓冲区长度
+
+#define CAPTURE_UPPER_LIMIT     4060            // 捕获下限值:文件内部定义
+#define CAPTURE_LOWER_LIMIT     32              // 捕获上限值:文件内部定义
+#define ADC_CHANNEL_COUNT       4               // ADC 通道数:文件内部定义
+
+#define WAVEFORM_COUNT          3               // 波表个数:文件内部定义
+
+#define ADSR_POINT_COUNT        3               //  ADSR有效点数:文件内部定义
+#define ADSR_HEIGHT             100.0f          //  ADSR高度:文件内部定义
+#define ADSR_WIDTH              100.0f          //  ADSR宽度:文件内部定义
+
+#ifdef __cplusplus
+    static constexpr float FM_CONSTANT = static_cast<float>(WAVEFORM_LENGTH) / SAMPLE_RATE;
+#endif
+
+#endif /* __COMMON_H__ */
