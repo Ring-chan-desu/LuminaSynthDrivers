@@ -2,51 +2,60 @@
 #define __OSC_H__
 
 /* --- 1. 通用头文件包含与宏定义 --- */
-#include "main.h"
+#include "../System/Common/Common.h"
 #include "dac.h"
 
-#include "../System/Interface/Lumina_Interface.h"
-#include "../System/Mediator/Mediator.h"
+// #include "main.h" // Moved to Common.h
+// #include "../System/Interface/Lumina_Interface.h" // Redundant dependency; common includes are centralized in Common.h
+#include "../System/Mediator/Mediators.h"
 #include "../System/Knob/Knob.h"
 #include "../WaveForm/WaveForm.h"
-
 #include <stdint.h>
 
+// #include <stdint.h> // Moved to Common.h
 
+// #define SAMPLE_RATE             48000                               // 采样率
+// #define HALF_BUFFER_LENGTH      256                                 // 半缓冲区长度
+// #define FULL_BUFFER_LENGTH      512   
 
 #ifdef __cplusplus
 /* --- 2. 仅 C++ 可见的类定义 --- */
-class OSC : public Subscriber {
+class OSC : public ParamSubscriber {
     private: // 参数名m待修改
-        Mediator* m = 0;
+        ParamMediator* m1 = 0;
+        StreamMediator* m2 = 0;
 
     public:
         // 1. 冒号后面是【初始化列表】，只负责给变量赋值
-        OSC(Mediator* Med)
-        :   m(Med),
+        OSC(ParamMediator* Med1, StreamMediator* Med2)
+        :   m1(Med1),
+            m2(Med2),
             WaveForm((uint16_t*)WaveFormList[0]),
             FM_Coeff(0.0f),
             AM_Coeff(1.0f),
-            Index(0),
             PhaseFlag(0),
             Accmulation(0.0f),
             TargetFreq(440.0f),
             ActualFreq(this->TargetFreq),
             Step(9.386667f)
         {
-            if (m != nullptr) {
-                m->Mediator_Subscribe(Topics::ADC_C6, this); // 在这里订阅！
-                m->Mediator_Subscribe(Topics::ADC_C7, this); // 在这里订阅！
+            if (m1 != nullptr) {
+                // m1->ParamMediator_Subscribe(ParamTopics::ADC_C6_Param, this); // 在这里订阅！
+                // m1->ParamMediator_Subscribe(ParamTopics::ADC_C7_Param, this); // 在这里订阅！
+                // m1->ParamParamMediator_Subscribe(ParamTopics::LFO1, this);
+            }
+
+            if (m2 != nullptr) {
+
             }
         }
 
         uint16_t* WaveForm;
-        uint16_t Buffer[FULL_BUFFER_LENGTH];    //  uint16_t
+        float Buffer[FULL_BUFFER_LENGTH];    //  OSC缓冲区,现在不需要了
 
         float FM_Coeff;
         float AM_Coeff;
 
-        uint16_t Index;
         uint8_t PhaseFlag;
 
         float Accmulation;
@@ -54,22 +63,26 @@ class OSC : public Subscriber {
         float ActualFreq;
         float Step;
 
-        void Subscriber_Update(Topics t, float value) override{
-            if (t == Topics::ADC_C6) {  //  FM
+        void ParamSubscriber_Update(ParamTopics t, float value) override{
+            if (t == ParamTopics::ADC_C6_Param) {  //  FM
                 this->FM_Coeff = value;
             }
-            if (t == Topics::ADC_C7) {  //  AM
+            if (t == ParamTopics::ADC_C7_Param) {  //  AM
                 this->AM_Coeff = value;
             }
+            // if (t == ParamTopics::LFO1) {
+            //     this->AM_Coeff *= value;
+            // }
         }
 
         void OSC_Init(void);
         
         void OSC_BufferFill(uint8_t HalfFlag);
+        uint16_t OSC_calculate(void);
         void OSC_Accmulate(void);
         void OSC_StepCalculate(void);
 
-        void OSC_WaveFormSelect(uint8_t WaveFormIndex);
+        void OSC_WaveFormSelect(uint8_t WaveFormIndex); //  待完善
 
         void OSC_FM(uint16_t Max);
         float OSC_AM(uint16_t Max);
