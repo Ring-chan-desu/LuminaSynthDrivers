@@ -2,7 +2,9 @@
 #define __RTOSBRIDGE_H__
 
 /* ---- 1. 通用头文件包含与宏定义 ---- */
-#include "main.h"
+#include "../Common/Common.h"
+
+// #include "main.h" // Moved to Common.h
 
 
 /* ---- 2. C/C++ 通用类型声明 ---- */

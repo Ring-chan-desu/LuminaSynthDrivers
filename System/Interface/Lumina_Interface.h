@@ -2,35 +2,23 @@
 #define __LUMINA_INTERFACE_H__
 
 /* ---- 1. 通用头文件包含与宏定义 ---- */
-#include "main.h"
-
-    /* ---- Marcos From OSC ----*/
-    #define SAMPLE_RATE             48000           // 采样率
-    #define WAVEFORM_LENGTH         1024            // 波表长度
-    #define HALF_BUFFER_LENGTH      256             // 半缓冲区长度
-    #define FULL_BUFFER_LENGTH      512             // 全缓冲区长度
-    #define FM_CONSTANT             0.021333333f    // 调频常量 (1024 / 48000)
-
-    /* ---- Marcos From Knobs ----*/
-    #define CAPTURE_UPPER_LIMIT 4060        // 捕获下限值
-    #define CAPTURE_LOWER_LIMIT 32          // 捕获上限值
-    #define ADC_CHANNEL_COUNT   4           // ADC 通道数
-
-    /* ---- Marcos From WaveForms ----*/    
-    #define WAVEFORM_COUNT  3    // 波表个数
-
-    /* ---- Macros From ADSR ---- */
-    #define ADSR_POINT_COUNT    3          //  ADSR有效点数
-    #define ADSR_HEIGHT         100.0f     //  ADSR高度
-    #define ADSR_WIDTH          100.0f     //  ADSR宽度
+#include "../Common/Common.h"
+// #include "main.h" // Moved to Common.h
+// #include "../WaveForm/WaveForm.h" // Redundant: only common macros are used here (moved to Common.h)
 
 /* ---- 2. C/C++ 通用类型声明 ---- */
 // extern OSC
 
 #ifdef __cplusplus
+/* ---- 2.1 前置声明 ---- */
+class OSC;
+class ADSR;
+class LFO;
+class Mediator;
+
 /* ---- 3. 仅 C++ 可见的类定义 ---- */
-
-
+extern OSC OSC1;
+extern LFO LFO1;
 /* 开启 C 兼容接口定义 */
 extern "C" {
 #endif
@@ -38,9 +26,10 @@ extern "C" {
 /* ---- 4. 供 C 调用的公开 API (Wrapper) ---- */
 void Lumina_Interface_Init(void);
 
-uint16_t* Lumina_Interface_GetOutBuffer(void);
+float* Lumina_Interface_GetOutBuffer(void);
 
 float Lumina_Interface_ADSR_GetValue(float CurrentX);  //  测试函数
+
 #ifdef __cplusplus
 } // 结束 extern "C"
 #endif
