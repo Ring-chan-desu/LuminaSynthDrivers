@@ -10,7 +10,7 @@
 // #include "main.h" // Moved to Common.h
 // #include "cmsis_os.h" // Moved to Common.h
 
-#include "../System/Mediator/Mediator.h"
+#include "../System/Mediator/Mediators.h"
 #include "../WaveForm/WaveForm.h"
 
 // #include <stdint.h> // Moved to Common.h
@@ -19,46 +19,60 @@
 
 #ifdef __cplusplus
 /* --- 2. 仅 C++ 可见的类定义 --- */
-class LFO : public Subscriber {
+class LFO : public ParamSubscriber {
     private: // 参数名m待修改
-        Mediator* m = 0;
+        ParamMediator* m1 = 0;
+        StreamMediator* m2 = 0;
         uint8_t prescalerCount = 0;
 
     public:
         // 1. 冒号后面是【初始化列表】，只负责给变量赋值
-        LFO(Mediator* Med)
-        :   m(Med),
+        LFO(ParamMediator* Med1, StreamMediator* Med2)
+        :   m1(Med1),
+            m2(Med2),
             WaveForm((uint16_t*)WaveFormList[0]),
+            FM_Coeff(1.0f),
+            AM_Coeff(1.0f),
             Accmulation(0.0f),
-            TargetFreq(5.0f),  // LFO 低频，默认 5Hz
-            ActualFreq(TargetFreq),
+            TargetFreq(1.0f),  // LFO 低频，默认 1Hz
+            ActualFreq(this->TargetFreq),
             Step(0)  // FM_CONSTANT
         {
-            if (m != nullptr) {
-                m->Mediator_Subscribe(Topics::ADC_C6, this); // 订阅频率控制
+            if (m1 != nullptr) {
+                m1->ParamMediator_Subscribe(ParamTopics::ADC_C6_Param, this); // 订阅频率控制
+            }
+
+            if (m2 != nullptr) {
+                // m2->RegisterStream(StreamTopics::LFO1_Stream, this->Buffer);    //  订阅LFO的流
             }
         }
 
         uint16_t* WaveForm;
+        float Buffer[FULL_BUFFER_LENGTH];    //  LFO缓冲区 此处用浮点
+
+        float FM_Coeff;
+        float AM_Coeff;
+        
+        uint8_t PhaseFlag;
 
         float Accmulation;
         float TargetFreq;
         float ActualFreq;
         float Step;
 
-        void Subscriber_Update(Topics t, float value) override{
-            if (t == Topics::ADC_C6) {  // 频率控制
+        void ParamSubscriber_Update(ParamTopics t, float value) override{
+            if (t == ParamTopics::ADC_C6_Param) {  // 频率控制
                 this->TargetFreq = value * 10.0f;  // 假设 value 是 0-1，映射到 0-10Hz
             }
         }
 
-        void LFO_Update(void);
+        void LFO_BufferFill(uint8_t HalfFlag);
+
         void LFO_Accmulate(void);
         void LFO_StepCalculate(void);
         void LFO_GetValue(void);
 
         uint16_t LFO_Lerp(void); // 线性插值
-        void LFO_FM(uint16_t Max);
 };
 /* 开启 C 兼容接口定义 */
 extern "C" {
@@ -68,11 +82,7 @@ extern "C" {
 
 
 /* --- 4. 供 C 调用的公开 API (Wrapper) --- */
-void LFO_Update_SemInit(void);
-void LFO_Update_TaskInit(void);
 
-extern osSemaphoreId_t LFO_Update_SemHandle;
-// void LFOGeneralInit();
 
 #ifdef __cplusplus
 } // 结束 extern "C"
