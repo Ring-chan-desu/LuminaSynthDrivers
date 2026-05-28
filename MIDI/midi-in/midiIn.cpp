@@ -5,15 +5,15 @@
 #include "usart.h"
 #include <stdint.h>
 #include <stdbool.h>
+#include "etl/list.h"
 
 uint8_t MIDI_receiveBuffer[MIDI_BUFFER_SIZE] = {0}; 
 MIDI_stateMachine currentState = MIDI_stateMachine::IDLE;   
 static midiNote currentNote;       
-static bool isNoteOnEvent = true;   
+// static bool currentNote.isNoteOnEvent = true;   
 
-int debug_trigger = 0; 
+etl::list<midiNote, 32> midiNoteBuffer; //  midi接收缓冲区
 
-// ✨ 下标统一改成标准的 uint16_t，防止算力溢出，初始化为 0
 uint16_t writeIndex = 0;  
 uint16_t readIndex  = 0;  
 
@@ -47,30 +47,32 @@ void MIDI_stateMachineProcess(uint8_t data)
     switch (currentState) {
         case MIDI_stateMachine::IDLE:
             if ((data & 0xF0) == 0x90) {    //  注意此处运算符优先级, == 比 & 高
-                isNoteOnEvent = true;   
-                currentNote.channel = data & 0x0F;
+                currentNote.isNoteOnEvent = true;   
+                currentNote.channel = (data & 0x0F) + 1;
                 currentState = MIDI_stateMachine::WAITING_NOTE; 
             } else if ((data & 0xF0) == 0x80) {
-                isNoteOnEvent = false;  
+                currentNote.isNoteOnEvent = false;  
                 currentNote.channel = data & 0x0F;
-                currentState = MIDI_stateMachine::WAITING_NOTE; 
+                currentState = MIDI_stateMachine::WAITING_NOTE; //  这两行看似重复,但是不能移到if外面去,不然在IDLE状态下无论何数据都会进入WAITING_NOTE
             }
             break;
 
         case MIDI_stateMachine::WAITING_NOTE:   
             currentNote.note = data;
-            if (isNoteOnEvent) {    
+            if (currentNote.isNoteOnEvent) {    
                 currentState = MIDI_stateMachine::WAITING_VELOCITY; 
             } else {
-                // <TODO>:松开后的处理
+                //TODO:按照地址映射音符,唯一查找
+                // midiNoteBuffer.erase();
                 currentState = MIDI_stateMachine::IDLE; 
             }
             break;
         
         case MIDI_stateMachine::WAITING_VELOCITY:   
             currentNote.velocity = data;    
-            debug_trigger = 1;  //  用于调试
+            currentNote.Freq = midiLUT[currentNote.note];
             currentState = MIDI_stateMachine::IDLE; 
+            midiNoteBuffer.push_back(currentNote);
             break;
 
         default:    
@@ -91,7 +93,7 @@ void MIDI_received_TaskInit(void)
 
 void MIDI_midiInit(){
     currentState = MIDI_stateMachine::IDLE;
-    isNoteOnEvent = false;
+    currentNote.isNoteOnEvent = false;
     readIndex = 0;
     writeIndex = 0;
 }

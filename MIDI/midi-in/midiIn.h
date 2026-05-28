@@ -20,9 +20,19 @@ enum class MIDI_stateMachine{
 class midiNote
 {
     public:
+        midiNote()
+        :   note(0),
+            velocity(0),
+            channel(0),
+            isNoteOnEvent(true),
+            Freq(0.0f)
+            {}
+
         uint8_t note;
         uint8_t velocity;
         uint8_t channel;
+        bool    isNoteOnEvent;  //  true: note on, false: note off
+        float   Freq;
 };
 
 /* 开启 C 兼容接口定义 */
@@ -30,7 +40,9 @@ extern "C" {
 #endif
 
 /* ---- 4. 供 C 调用的公开 API (Wrapper) ---- */
-extern uint8_t MIDI_receiveBuffer[MIDI_BUFFER_SIZE];
+extern uint8_t MIDI_receiveBuffer[MIDI_BUFFER_SIZE];    //  midi接收缓冲区
+
+extern const float midiLUT[128];
 
 void MIDI_rtosInit(void);
 void MIDI_midiInit(void);
