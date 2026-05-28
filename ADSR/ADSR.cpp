@@ -1,22 +1,18 @@
-#include "FreeRTOS.h"
-#include "cmsis_os2.h"
-#include "task.h"
-#include "main.h"
-#include "cmsis_os.h"
+#include "../System/Common/Common.h"
 
 #include "./ADSR.h"
 #include "../System/Knob/Knob.h"
-#include "../System/Interface/Lumina_Interface.h"
+// #include "../System/Interface/Lumina_Interface.h" // Redundant include; ADSR.h already provides required declarations
 
 /* ---- Externs ---- */
 extern float ADC_BufferProcessed[4];
 
 void ADSR::ADSR_Init(){
-        if(_mediator != NULL){
-        _mediator->Mediator_Subscribe(Topics::ADC_C6, this);
-        _mediator->Mediator_Subscribe(Topics::ADC_C7, this);
-        _mediator->Mediator_Subscribe(Topics::ADC_C14, this);
-        _mediator->Mediator_Subscribe(Topics::ADC_C15, this);
+    if(_mediator1 != NULL){
+        _mediator1->ParamMediator_Subscribe(ParamTopics::ADC_C6_Param, this);
+        _mediator1->ParamMediator_Subscribe(ParamTopics::ADC_C7_Param, this);
+        _mediator1->ParamMediator_Subscribe(ParamTopics::ADC_C14_Param, this);
+        _mediator1->ParamMediator_Subscribe(ParamTopics::ADC_C15_Param, this);
     }
 }
 
@@ -83,48 +79,27 @@ float ADSR::ADSR_FunctionValueCalculate(float x) {
     }
 }
 
-// void ADSR::ADSR_Accmulate(void){ //    未完成
-    
-// }
-/* ---- 对象实例化 ---- */
-ADSR ADSR1(&(Mediator::GetInstance()));
-
-/* ---- RTOS ---- */
-/* ---- ADSR Update Semaphore ---- */
-osSemaphoreId_t ADSR_Update_SemHandle;
-
-void ADSR_Update_SemInit(void)
-{
-    const osSemaphoreAttr_t ADSR_Update_SemAttr = {
-        .name = "ADSR_Update_Sem"
-    };
-    // 创建二进制信号量：初始值0，最大值1
-    ADSR_Update_SemHandle = osSemaphoreNew(1, 0, &ADSR_Update_SemAttr);
+void ADSR::ADSR_StepCalculate(void){
+    // 依据 ADSR_Period 与 ADSR_FM_CONSTANT 计算每个采样点在横轴上的步进
+    this->ADSR_Step = ADSR_FM_CONSTANT;
 }
 
-/* ---- ADSR Update Task ---- */
-osThreadId_t ADSR_Update_TaskHandle;
+void ADSR::ADSR_BufferFill(uint8_t HalfFlag){
+    float* Start = (HalfFlag == 0) ? &this->Buffer[0] : &this->Buffer[HALF_BUFFER_LENGTH];
 
-void ADSR_Update_Task(void *argument)
-{
-    for(;;)
-    {
-        osSemaphoreAcquire(ADSR_Update_SemHandle, osWaitForever);
-        Mediator::GetInstance().Mediator_Publish(Topics::ADC_C6, ADC_BufferProcessed[0]);  //  Knobs Publish    
-        Mediator::GetInstance().Mediator_Publish(Topics::ADC_C7, ADC_BufferProcessed[1]);
-        Mediator::GetInstance().Mediator_Publish(Topics::ADC_C14, ADC_BufferProcessed[2]);
-        Mediator::GetInstance().Mediator_Publish(Topics::ADC_C15, ADC_BufferProcessed[3]);
+    for(int i = 0 ; i < HALF_BUFFER_LENGTH ; i++){
+        Start[i] = this->ADSR_FunctionValueCalculate(this->ADSR_Accmulation);
+        this->ADSR_Accmulate();
+    }
+
+    if (HalfFlag) {
+        this->ADSR_StepCalculate();
     }
 }
 
-void ADSR_Update_TaskInit(void)
-{
-    const osThreadAttr_t ADSR_Update_TaskAttr = {
-        .name = "ADSR_Update_Task",
-        .stack_size = 128 * 4,
-        .priority = (osPriority_t) osPriorityNormal,
-    };
-    ADSR_Update_TaskHandle = osThreadNew(ADSR_Update_Task, NULL, &ADSR_Update_TaskAttr);
+void ADSR::ADSR_Accmulate(void){
+    this->ADSR_Accmulation += this->ADSR_Step;
+    if (this->ADSR_Accmulation >= (float)ADSR_WIDTH) {
+        this->ADSR_Accmulation -= (float)ADSR_WIDTH;
+    }
 }
-
-//  这边四个旋钮的捕获丢到Knob.c文件里面去,谁弄得ADSR)
