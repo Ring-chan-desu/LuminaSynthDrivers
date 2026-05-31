@@ -20,6 +20,14 @@
 
 #ifdef __cplusplus
 /* --- 2. 仅 C++ 可见的类定义 --- */
+typedef struct{
+    float accmulation;
+    float step;
+    float targetFreq;
+    float actualFreq;
+    bool gate;
+}commonParam;
+
 class OSC : public ParamSubscriber {
     private: // 参数名m待修改
         ParamMediator* m1 = 0;
@@ -33,12 +41,12 @@ class OSC : public ParamSubscriber {
             WaveForm((uint16_t*)WaveFormList[0]),
             FM_Coeff(0.0f),
             AM_Coeff(1.0f),
-            PhaseFlag(0),
-            gate(0),
-            Accmulation(0.0f),
-            TargetFreq(440.0f),
-            ActualFreq(this->TargetFreq),
-            Step(9.386667f)
+            PhaseFlag(0)
+            // gate(0),
+            // Accmulation(0.0f),
+            // TargetFreq(440.0f),
+            // ActualFreq(this->TargetFreq),
+            // Step(9.386667f)
         {
             if (m1 != nullptr) {
                 // m1->ParamMediator_Subscribe(ParamTopics::ADC_C6_Param, this); // 在这里订阅！
@@ -52,18 +60,19 @@ class OSC : public ParamSubscriber {
         }
 
         uint16_t* WaveForm;
-        float Buffer[FULL_BUFFER_LENGTH];    //  OSC缓冲区,现在不需要了
+        // float Buffer[FULL_BUFFER_LENGTH];    //  OSC缓冲区,现在不需要了
 
         float FM_Coeff;
         float AM_Coeff;
 
         uint8_t PhaseFlag;
-        uint8_t gate;
+        commonParam oscSlot[MAX_POLY_NUM];
+        // uint8_t gate;
 
-        float Accmulation;
-        float TargetFreq;
-        float ActualFreq;
-        float Step;
+        // float Accmulation;
+        // float TargetFreq;
+        // float ActualFreq;
+        // float Step;
 
         void ParamSubscriber_Update(ParamTopics t, float value) override{
             if (t == ParamTopics::ADC_C6_Param) {  //  FM
