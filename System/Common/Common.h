@@ -54,6 +54,8 @@ extern "C" {
 #define ADSR_WIDTH              100.0f          //  ADSR宽度:文件内部定义
 #define ADSR_PERIOD             3.0f            //  ADSR周期(秒)：控制完整 ADSR 曲线循环的默认时长（秒）。默认值 3 秒，可按需调整。
 
+#define MAX_POLY_NUM            16              //  最大复音数
+
 #ifdef __cplusplus
     static constexpr float FM_CONSTANT      = static_cast<float>(WAVEFORM_LENGTH) / SAMPLE_RATE;                //  调频常量 能在编译阶段就被计算好
     static constexpr float ADSR_FM_CONSTANT = static_cast<float>(ADSR_WIDTH) / (SAMPLE_RATE * ADSR_PERIOD);     //  ADSR调频常量
