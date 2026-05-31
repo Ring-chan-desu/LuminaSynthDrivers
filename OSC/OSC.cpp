@@ -9,6 +9,7 @@
 #include "../System/Knob/Knob.h"
 #include "stm32f4xx_hal_adc.h"
 #include <stdint.h>
+#include "../MIDI/midi-in/midiIn.h"
 
 /* ---- 振荡器 ---- */
 
@@ -20,13 +21,19 @@ void OSC::OSC_StepCalculate(){
 
 // 下标似乎跟OSC没有什么特别的关系,只要它是在连续累加那就OK
 void OSC::OSC_BufferFill(uint8_t HalfFlag){
+    #if 0
+    // 先读取midi的相关信息并且设置
+    // this->TargetFreq = currentNote.Freq;    //  频率
+    // this->gate = !currentNote.isNoteOnEvent; //  按下
     // 明确指定起始位置
     float* Start = (HalfFlag == 0) ? &this->Buffer[0] : &this->Buffer[HALF_BUFFER_LENGTH];
     
     for(int i = 0 ; i < HALF_BUFFER_LENGTH ; i ++){
-        // Start[i] = this->OSC_Lerp() * this->OSC_AM(CAPTURE_UPPER_LIMIT);
-        Start[i] = this->OSC_Lerp() * this->AM_Coeff;
-        // float temp = this->OSC_Lerp() * this->AM_Coeff;
+        // if(this->gate){
+            // Start[i] = 0;
+        // } else {
+            Start[i] = this->OSC_Lerp() * this->AM_Coeff;
+        // }
         this->OSC_Accmulate();
     }
     
@@ -35,12 +42,17 @@ void OSC::OSC_BufferFill(uint8_t HalfFlag){
         // this->OSC_WaveFormSelect(__HAL_TIM_GET_COUNTER(&htim3));    //  编码器给ban了,暂时注释掉
     }
     // return temp;    //  返回当前下标所对值
+    #endif
+}
+
+void OSC::OSC_update(void){
+    this->TargetFreq = currentNote.Freq;    //  频率
+    this->OSC_StepCalculate();
 }
 
 uint16_t OSC::OSC_calculate(){
-    float temp = this->OSC_Lerp() * this->AM_Coeff;
+    uint16_t temp = this->OSC_Lerp();
     this->OSC_Accmulate();
-    // 下标计算放在中断头部
     return temp;
 }
 

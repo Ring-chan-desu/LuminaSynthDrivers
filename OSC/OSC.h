@@ -34,6 +34,7 @@ class OSC : public ParamSubscriber {
             FM_Coeff(0.0f),
             AM_Coeff(1.0f),
             PhaseFlag(0),
+            gate(0),
             Accmulation(0.0f),
             TargetFreq(440.0f),
             ActualFreq(this->TargetFreq),
@@ -57,6 +58,7 @@ class OSC : public ParamSubscriber {
         float AM_Coeff;
 
         uint8_t PhaseFlag;
+        uint8_t gate;
 
         float Accmulation;
         float TargetFreq;
@@ -78,6 +80,7 @@ class OSC : public ParamSubscriber {
         void OSC_Init(void);
         
         void OSC_BufferFill(uint8_t HalfFlag);
+        void OSC_update(void);
         uint16_t OSC_calculate(void);
         void OSC_Accmulate(void);
         void OSC_StepCalculate(void);
