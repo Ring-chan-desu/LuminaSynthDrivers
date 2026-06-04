@@ -3,8 +3,11 @@
 
 /* ---- 1. 通用头文件包含与宏定义 ---- */
 #include "../../System/Common/Common.h"
+#include "../midiMediator/midiMediator.h"
+#include <cstdint>
 
 #define MIDI_BUFFER_SIZE 128
+#define MIDI_POLY_SIZE 16
 /* ---- 2. C/C++ 通用类型声明 ---- */
 
 
@@ -24,17 +27,24 @@ class midiNote
         :   note(0),
             velocity(0),
             channel(0),
-            isNoteOnEvent(true),
-            Freq(0.0f)
+            isNoteOnEvent(false),
+            Freq(0.0f),
+            timestamp(0)
             {}
 
-        uint8_t note;
-        uint8_t velocity;
-        uint8_t channel;
-        bool    isNoteOnEvent;  //  true: note on, false: note off
-        float   Freq;
+        uint8_t     note;
+        uint8_t     velocity;
+        uint8_t     channel;
+        bool        isNoteOnEvent;  //  true: note on, false: note off
+        float       Freq;
+        uint32_t    timestamp;
 };
 
+// typedef struct noteInstance
+// {
+//     uint8_t note;
+//     bool isReleased;
+// };
 /* 开启 C 兼容接口定义 */
 extern "C" {
 #endif
@@ -43,8 +53,9 @@ extern "C" {
 extern uint8_t MIDI_receiveBuffer[MIDI_BUFFER_SIZE];    //  midi接收缓冲区
 
 extern const float midiLUT[128];
+extern midiNote currentNote;   //  当前音符
 
-void MIDI_rtosInit(void);
+void MIDI_received_TaskInit(void);
 void MIDI_midiInit(void);
 
 #ifdef __cplusplus

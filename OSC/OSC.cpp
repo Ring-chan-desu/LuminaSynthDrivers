@@ -4,23 +4,83 @@
 
 // #include "./OSC.h" // Redundant duplicate include
 // #include "../System/Interface/Lumina_Interface.h" // Redundant include; OSC.h and Common.h provide required declarations
-#include "../System/Mediator/Mediators.h"
-#include "../WaveForm/WaveForm.h"
+#include "../System/Mediator/Mediators.h"   //  中转站
+#include "../WaveForm/WaveForm.h"   //  波表
 #include "../System/Knob/Knob.h"
 #include "stm32f4xx_hal_adc.h"
 #include <stdint.h>
-#include "../MIDI/midi-in/midiIn.h"
+#include "../MIDI/midi-in/midiIn.h" //  MIDI
 
 /* ---- 振荡器 ---- */
 
-void OSC::OSC_StepCalculate(){
-    this->OSC_FM(CAPTURE_UPPER_LIMIT);
-    this->Step = this->ActualFreq * FM_CONSTANT;
-    // this->Step = 880.0f * (1024.0f / 48000.0f);  //  测试用,强制锁死目标频率,测试实际的外设触发频率
+void OSC::OSC_StepCalculate(void){  //  一次性全算完
+    // this->OSC_FM(CAPTURE_UPPER_LIMIT);
+    // this->Step = this->ActualFreq * FM_CONSTANT;
+    for (commonParam& instance : oscSlot) {
+        if (instance.gate == true) {
+            instance.step = instance.targetFreq * FM_CONSTANT;
+        }
+    }
 }
 
+void OSC::OSC_Accmulate(void){  // 统一累加
+    // this->Accmulation += this->Step;
+    // if (this->Accmulation >= (float)WAVEFORM_LENGTH) {
+    //     this->Accmulation -= (float)WAVEFORM_LENGTH;
+    // }
+    for (commonParam& instance : oscSlot) {
+        instance.accmulation += instance.step;
+        if (instance.accmulation >= (float)WAVEFORM_LENGTH) {
+            instance.accmulation -= (float)WAVEFORM_LENGTH;
+        }
+    }
+}
+
+//  TODO: 记得改个名字
+//  TODO: 最终输出幅值和,加权$\frac{1}{16}$
+uint16_t OSC::OSC_calculate(void){  
+    float sum = 0;
+    int activeCount = 0; // 记录到底有几个通道在响
+    
+    for (commonParam& instance : oscSlot) {
+        if (instance.gate == true) { // 🌟 只有开门的通道才准加进来！
+            sum += this->OSC_Lerp(instance);
+            activeCount++;
+        }
+    }
+    this->OSC_Accmulate();
+    
+    if (activeCount == 0) return 2048; // 全关了就返回中点
+    return sum / (float)activeCount;   // 🌟 动态加权平均，有多少算多少，绝不让死通道稀释振幅！
+}
+
+uint16_t OSC::OSC_Lerp(commonParam& instance){   //  本方法集成了累加器取值和波表取值,最终输出的是根据当前累加器取波表的结果值
+    uint16_t index_l = (uint16_t)instance.accmulation;
+
+    uint16_t index_r = index_l + 1;
+    if (index_r >= WAVEFORM_LENGTH) {
+        index_r = 0;
+    }
+
+    float frac = instance.accmulation - (float)index_l;
+
+    float y0 = (float)this->WaveForm[index_l];  //  波表是共用的
+    float y1 = (float)this->WaveForm[index_r];
+
+    uint32_t result = (uint32_t)(y0 + frac * (y1 - y0));
+    return (uint16_t)(result > 4095 ? 4095 : result); // 强制限幅
+}
+
+//  TODO: 现在频率不是公用的了,这个也得重写
+void OSC::OSC_update(void){
+    // this->TargetFreq = currentNote.Freq;    //  频率
+    this->OSC_StepCalculate();
+}
+
+/* ----------------------------------------分界线----------------------------------------*/
+
 // 下标似乎跟OSC没有什么特别的关系,只要它是在连续累加那就OK
-void OSC::OSC_BufferFill(uint8_t HalfFlag){
+void OSC::OSC_BufferFill(uint8_t HalfFlag){ //  NOTE:这个函数考虑弃用
     #if 0
     // 先读取midi的相关信息并且设置
     // this->TargetFreq = currentNote.Freq;    //  频率
@@ -45,46 +105,11 @@ void OSC::OSC_BufferFill(uint8_t HalfFlag){
     #endif
 }
 
-void OSC::OSC_update(void){
-    this->TargetFreq = currentNote.Freq;    //  频率
-    this->OSC_StepCalculate();
-}
-
-uint16_t OSC::OSC_calculate(){
-    uint16_t temp = this->OSC_Lerp();
-    this->OSC_Accmulate();
-    return temp;
-}
-
-void OSC::OSC_Accmulate(void){
-    this->Accmulation += this->Step;
-    if (this->Accmulation >= (float)WAVEFORM_LENGTH) {
-        this->Accmulation -= (float)WAVEFORM_LENGTH;
-    }
-}
-
-uint16_t OSC::OSC_Lerp(){   //  本方法集成了累加器取值和波表取值,最终输出的是根据当前累加器取波表的结果值
-    uint16_t index_l = (uint16_t)this->Accmulation;
-    
-    uint16_t index_r = index_l + 1;
-    if (index_r >= WAVEFORM_LENGTH) {
-        index_r = 0;
-    }
-
-    float frac = this->Accmulation - (float)index_l;
-
-    float y0 = (float)this->WaveForm[index_l];
-    float y1 = (float)this->WaveForm[index_r];
-
-    uint32_t result = (uint32_t)(y0 + frac * (y1 - y0));
-    return (uint16_t)(result > 4095 ? 4095 : result); // 强制限幅
-}
-
 // FM 和 AM 的实现方法趋同,但是调用方法不同,所引用的数据存储方式位置和结构都不同,有待修改.
 void OSC::OSC_FM(uint16_t Max){
     // uint16_t TemporaryValue = this->FM_Coeff;
     // this->ActualFreq = this->TargetFreq + (this->TargetFreq * (float)TemporaryValue / (float)Max);
-    this->ActualFreq = this->TargetFreq + (this->TargetFreq * this->FM_Coeff);
+    // this->ActualFreq = this->TargetFreq + (this->TargetFreq * this->FM_Coeff);
 }
 
 // float OSC::OSC_AM(uint16_t Max){
@@ -92,9 +117,10 @@ void OSC::OSC_FM(uint16_t Max){
 //     return (float)TemporaryValue / (float)Max;
 // }
 
-void OSC::OSC_WaveFormSelect(uint8_t WaveFormIndex){
-    this->WaveForm = (uint16_t *)WaveFormList[WaveFormIndex];
-}
+//  NOTE: 编码器坏了,所暂时ban掉
+// void OSC::OSC_WaveFormSelect(uint8_t WaveFormIndex){
+//     this->WaveForm = (uint16_t *)WaveFormList[WaveFormIndex];
+// }
 
 
 // OSC OSC1(&MediatorTest);
@@ -104,4 +130,4 @@ void OSC::OSC_WaveFormSelect(uint8_t WaveFormIndex){
 // uint16_t *OutBuffer = OSC1.Buffer; // 此处将OSC1的缓冲区直接链接至输出缓冲区
 
 
-// RTOS任务待补充
+// RTOS任务待补充,要补充一个0.2秒到缓冲区里面拿数据的任务

@@ -1,36 +1,32 @@
 #include "./midiIn.h"
-#include "cmsis_os.h"
-#include "cmsis_os2.h"
-#include "stm32f103xb.h"
 #include "usart.h"
-#include <stdint.h>
-#include <stdbool.h>
-#include "etl/list.h"
+// #include "etl/list.h"
+#include "../../System/Mediator/ParamMediator.h"
 
 uint8_t MIDI_receiveBuffer[MIDI_BUFFER_SIZE] = {0}; 
 MIDI_stateMachine currentState = MIDI_stateMachine::IDLE;   
-static midiNote currentNote;       
-// static bool currentNote.isNoteOnEvent = true;   
+midiNote currentNote;   //  当前音符
 
-etl::list<midiNote, 32> midiNoteBuffer; //  midi接收缓冲区
+// etl::list<midiNote, MIDI_POLY_SIZE> plist; //  midi复音缓冲区
 
 uint16_t writeIndex = 0;  
 uint16_t readIndex  = 0;  
 
+/*前置声明*/
 void MIDI_stateMachineProcess(uint8_t data);    
+void MIDI_midiInit();
 
 /* ---- MIDI received Task ---- */
 osThreadId_t MIDI_received_TaskHandle;
 
 void MIDI_received_Task(void *argument)
 {
-    // 🚀 开机第一件事，拉开 128 字节循环接收大网
     HAL_UART_Receive_DMA(&huart3, MIDI_receiveBuffer, MIDI_BUFFER_SIZE);
-
+    MIDI_midiInit();
     for(;;)
     {
         osDelay(2); //  每隔 2ms 执行一次,process放在delay之后防止读到脏数据
-        writeIndex = MIDI_BUFFER_SIZE - DMA1_Channel3->CNDTR;   //  直接读寄存器
+        writeIndex = MIDI_BUFFER_SIZE - DMA1_Stream1->NDTR;   //  直接读寄存器
         while (readIndex != writeIndex) 
         {
             uint8_t rawData = MIDI_receiveBuffer[readIndex];    //  直接取数据
@@ -40,6 +36,16 @@ void MIDI_received_Task(void *argument)
             readIndex = (readIndex + 1) % MIDI_BUFFER_SIZE; //  在处理方法外的回绕
         }
     }
+}
+
+void MIDI_received_TaskInit(void)
+{
+    const osThreadAttr_t MIDI_received_TaskAttr = {
+        .name = "MIDI_received_Task",
+        .stack_size = 256 * 4,
+        .priority = (osPriority_t) osPriorityNormal,
+    };
+    MIDI_received_TaskHandle = osThreadNew(MIDI_received_Task, NULL, &MIDI_received_TaskAttr);
 }
 
 void MIDI_stateMachineProcess(uint8_t data)
@@ -62,17 +68,17 @@ void MIDI_stateMachineProcess(uint8_t data)
             if (currentNote.isNoteOnEvent) {    
                 currentState = MIDI_stateMachine::WAITING_VELOCITY; 
             } else {
-                //TODO:按照地址映射音符,唯一查找
-                // midiNoteBuffer.erase();
-                currentState = MIDI_stateMachine::IDLE; 
+                ParamMediator::Param_GetInstance().ParamMediator_Publish(ParamTopics::MIDI_isUpdate, 0);
+                currentState = MIDI_stateMachine::IDLE; // 松开时序到此结束,我们可以在这里给中转站发消息
             }
             break;
         
-        case MIDI_stateMachine::WAITING_VELOCITY:   
+        case MIDI_stateMachine::WAITING_VELOCITY:   //  按下的时序到此处结束,在这里调用OSC的方法
             currentNote.velocity = data;    
             currentNote.Freq = midiLUT[currentNote.note];
+            currentNote.timestamp = HAL_GetTick();  //  时间戳
+            ParamMediator::Param_GetInstance().ParamMediator_Publish(ParamTopics::MIDI_isUpdate, 0);
             currentState = MIDI_stateMachine::IDLE; 
-            midiNoteBuffer.push_back(currentNote);
             break;
 
         default:    
@@ -81,23 +87,9 @@ void MIDI_stateMachineProcess(uint8_t data)
     }
 }
 
-void MIDI_received_TaskInit(void)
-{
-    const osThreadAttr_t MIDI_received_TaskAttr = {
-        .name = "MIDI_received_Task",
-        .stack_size = 256 * 4,
-        .priority = (osPriority_t) osPriorityNormal,
-    };
-    MIDI_received_TaskHandle = osThreadNew(MIDI_received_Task, NULL, &MIDI_received_TaskAttr);
-}
-
 void MIDI_midiInit(){
     currentState = MIDI_stateMachine::IDLE;
     currentNote.isNoteOnEvent = false;
     readIndex = 0;
     writeIndex = 0;
-}
-
-void MIDI_rtosInit(){
-    MIDI_received_TaskInit();
 }
