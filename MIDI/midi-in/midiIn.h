@@ -3,7 +3,7 @@
 
 /* ---- 1. 通用头文件包含与宏定义 ---- */
 #include "../../System/Common/Common.h"
-#include "../midiMediator/midiMediator.h"
+#include "../../System/Mediator/ParamMediator.h"
 #include <cstdint>
 
 #define MIDI_BUFFER_SIZE 128

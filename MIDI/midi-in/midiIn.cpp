@@ -1,7 +1,6 @@
 #include "./midiIn.h"
 #include "usart.h"
 // #include "etl/list.h"
-#include "../../System/Mediator/ParamMediator.h"
 
 uint8_t MIDI_receiveBuffer[MIDI_BUFFER_SIZE] = {0}; 
 MIDI_stateMachine currentState = MIDI_stateMachine::IDLE;   

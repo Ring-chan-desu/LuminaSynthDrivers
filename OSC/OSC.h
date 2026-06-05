@@ -147,6 +147,7 @@ class OSC : public ParamSubscriber {
                 }
             }
         }
+        // 待优化
         void OSC_Init(void);
         
         void OSC_BufferFill(uint8_t HalfFlag);
