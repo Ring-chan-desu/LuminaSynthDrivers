@@ -4,6 +4,7 @@
 /* ---- 1. 通用头文件包含与宏定义 ---- */
 #include "../../System/Common/Common.h"
 #include "../../System/Mediator/ParamMediator.h"
+#include "etl/queue.h"
 #include <cstdint>
 
 #define MIDI_BUFFER_SIZE 128
@@ -51,7 +52,7 @@ extern "C" {
 
 /* ---- 4. 供 C 调用的公开 API (Wrapper) ---- */
 extern uint8_t MIDI_receiveBuffer[MIDI_BUFFER_SIZE];    //  midi接收缓冲区
-
+extern etl::queue<midiNote, 128> pQueue;   //  复音队列
 extern const float midiLUT[128];
 extern midiNote currentNote;   //  当前音符
 

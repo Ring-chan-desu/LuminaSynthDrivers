@@ -1,12 +1,12 @@
 #include "./midiIn.h"
 #include "usart.h"
-// #include "etl/list.h"
 
 uint8_t MIDI_receiveBuffer[MIDI_BUFFER_SIZE] = {0}; 
 MIDI_stateMachine currentState = MIDI_stateMachine::IDLE;   
 midiNote currentNote;   //  当前音符
 
 // etl::list<midiNote, MIDI_POLY_SIZE> plist; //  midi复音缓冲区
+etl::queue<midiNote, 128> pQueue;   //  复音队列
 
 uint16_t writeIndex = 0;  
 uint16_t readIndex  = 0;  
@@ -67,6 +67,7 @@ void MIDI_stateMachineProcess(uint8_t data)
             if (currentNote.isNoteOnEvent) {    
                 currentState = MIDI_stateMachine::WAITING_VELOCITY; 
             } else {
+                pQueue.push(currentNote);
                 ParamMediator::Param_GetInstance().ParamMediator_Publish(ParamTopics::MIDI_isUpdate, 0);
                 currentState = MIDI_stateMachine::IDLE; // 松开时序到此结束,我们可以在这里给中转站发消息
             }
@@ -76,6 +77,7 @@ void MIDI_stateMachineProcess(uint8_t data)
             currentNote.velocity = data;    
             currentNote.Freq = midiLUT[currentNote.note];
             currentNote.timestamp = HAL_GetTick();  //  时间戳
+            pQueue.push(currentNote);
             ParamMediator::Param_GetInstance().ParamMediator_Publish(ParamTopics::MIDI_isUpdate, 0);
             currentState = MIDI_stateMachine::IDLE; 
             break;
