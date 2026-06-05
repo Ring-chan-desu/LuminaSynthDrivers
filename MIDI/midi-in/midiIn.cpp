@@ -24,7 +24,7 @@ void MIDI_received_Task(void *argument)
     MIDI_midiInit();
     for(;;)
     {
-        osDelay(2); //  每隔 2ms 执行一次,process放在delay之后防止读到脏数据
+        // osDelay(2); //  每隔 2ms 执行一次,process放在delay之后防止读到脏数据?
         writeIndex = MIDI_BUFFER_SIZE - DMA1_Stream1->NDTR;   //  直接读寄存器
         while (readIndex != writeIndex) 
         {
@@ -67,6 +67,8 @@ void MIDI_stateMachineProcess(uint8_t data)
             if (currentNote.isNoteOnEvent) {    
                 currentState = MIDI_stateMachine::WAITING_VELOCITY; 
             } else {
+                currentNote.Freq = midiLUT[currentNote.note];
+                currentNote.timestamp = HAL_GetTick();
                 pQueue.push(currentNote);
                 ParamMediator::Param_GetInstance().ParamMediator_Publish(ParamTopics::MIDI_isUpdate, 0);
                 currentState = MIDI_stateMachine::IDLE; // 松开时序到此结束,我们可以在这里给中转站发消息

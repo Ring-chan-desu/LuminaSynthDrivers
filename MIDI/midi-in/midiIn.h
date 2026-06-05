@@ -40,12 +40,6 @@ class midiNote
         float       Freq;
         uint32_t    timestamp;
 };
-
-// typedef struct noteInstance
-// {
-//     uint8_t note;
-//     bool isReleased;
-// };
 /* 开启 C 兼容接口定义 */
 extern "C" {
 #endif

@@ -29,6 +29,7 @@ typedef struct{
     float targetFreq;
     float actualFreq;
     uint32_t timestamp;
+    uint16_t note;
     bool gate;
 }commonParam;
 
@@ -100,7 +101,6 @@ class OSC : public ParamSubscriber {
 
             }
         }
-        // 待优化
         void OSC_Init(void);
         
         void OSC_BufferFill(uint8_t HalfFlag);
