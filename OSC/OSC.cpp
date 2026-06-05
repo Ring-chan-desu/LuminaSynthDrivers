@@ -74,9 +74,67 @@ uint16_t OSC::OSC_Lerp(commonParam& instance){   //  本方法集成了累加器
 //  TODO: 现在频率不是公用的了,这个也得重写
 void OSC::OSC_update(void){
     // this->TargetFreq = currentNote.Freq;    //  频率
+    this->OSC_midiRead();
     this->OSC_StepCalculate();
 }
 
+void OSC::OSC_midiRead(void){
+    if (pQueue.empty()) {
+        return; //  空队列直接不看了,拜拜了您内
+    }
+    commonParam* instance = nullptr;    //  用于存放被找到的元素的指针
+    if (pQueue.front().isNoteOnEvent) { //  如果是noteOn
+        bool isFind = false;    //  标志位先置0
+        for (int i = 0; i < MAX_POLY_NUM; i++) {    //  先遍历看有无空闲的
+            instance = &this->oscSlot[i]; //  每到一个元素更新一次指针
+            if (instance->gate == false) {   //  发现空闲的就赋值
+
+                instance->targetFreq = currentNote.Freq;
+                instance->timestamp = currentNote.timestamp;
+                instance->gate = true;   //  赋值
+                pQueue.pop();
+
+                isFind = true;  //  找到了
+                break;  //  跳出当前循环
+            }
+        }
+
+        if (!isFind) {  //  没找到空闲的就找时间戳最大的然后直接切掉
+            instance = &this->oscSlot[0];    //  先给0号元素提取出来
+            for (int i = 1; i < MAX_POLY_NUM; i++) {    //  依次检查其他元素
+                if (this->oscSlot[i].timestamp > instance->timestamp) {    //  如果当前元素的时间戳比前面的时间戳大,那么就丢到擂台上当擂主
+                    instance = &this->oscSlot[i]; //  更新指针
+                }
+            }
+            //  最后指针所指的就是时间戳最大的那个元素
+            instance->gate = true;
+            instance->targetFreq = currentNote.Freq;
+            instance->timestamp = currentNote.timestamp;   //  赋值
+            pQueue.pop();
+        }
+    } else {
+        for (int i = 0; i < MAX_POLY_NUM; i++) {    //  先遍历,找个同音的
+            instance = &this->oscSlot[i]; //  依旧更新指针
+            if (this->oscSlot[i].gate == true && this->oscSlot[i].targetFreq == currentNote.Freq) {    //  同音判断
+                instance = &this->oscSlot[i];   //  随便找个同音的当擂主,把它指针传给instance
+                break;
+            }
+        }
+        for (int i = 0; i < MAX_POLY_NUM; i++) {    //  再遍历一遍,找同音的跟擂主比较
+            if (this->oscSlot[i].timestamp > instance->timestamp) {
+                instance = &this->oscSlot[i];  //  找到更大的放在擂台上
+            }
+        }
+        // 最后剩下来的就是最老的同音了,把他关上
+        instance->gate = false; //  先关闭
+        instance->accmulation = 0.0f;
+        instance->step = 0.0f;
+        instance->targetFreq = 0.0f;
+        instance->actualFreq = 0.0f;
+        instance->timestamp = 0; //  参数全清零
+        pQueue.pop();
+    }
+}
 /* ----------------------------------------分界线----------------------------------------*/
 
 // 下标似乎跟OSC没有什么特别的关系,只要它是在连续累加那就OK
