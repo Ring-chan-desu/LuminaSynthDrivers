@@ -36,7 +36,7 @@ class midiNote
         uint8_t     note;
         uint8_t     velocity;
         uint8_t     channel;
-        bool        isNoteOnEvent;  //  true: note on, false: note off
+        bool        isNoteOnEvent;
         float       Freq;
         uint32_t    timestamp;
 };

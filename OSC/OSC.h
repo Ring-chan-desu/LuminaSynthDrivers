@@ -39,7 +39,7 @@ class OSC : public ParamSubscriber {
         StreamMediator* m2 = 0;
 
     public:
-        // 1. 冒号后面是【初始化列表】，只负责给变量赋值
+        /* ---- 初始化列表 ---- */
         OSC(ParamMediator* Med1, StreamMediator* Med2)
         :   m1(Med1),
             m2(Med2),
@@ -65,12 +65,13 @@ class OSC : public ParamSubscriber {
 
             }
         }
-
+        /* ---- 属性 ---- */
         uint16_t* WaveForm;
         // float Buffer[FULL_BUFFER_LENGTH];    //  OSC缓冲区,现在不需要了
 
         float FM_Coeff;
         float AM_Coeff;
+        float oscBuffer[HALF_BUFFER_LENGTH];
 
         uint8_t PhaseFlag;
         commonParam oscSlot[MAX_POLY_NUM];
@@ -87,6 +88,7 @@ class OSC : public ParamSubscriber {
         // float ActualFreq;
         // float Step;
 
+        /* ---- 方法 ---- */
         void ParamSubscriber_Update(ParamTopics t, float value) override{
             if (t == ParamTopics::ADC_C6_Param) {  //  FM
                 this->FM_Coeff = value;
@@ -108,7 +110,7 @@ class OSC : public ParamSubscriber {
         
         void OSC_StepCalculate(void);
         void OSC_Accmulate(void);
-        uint16_t OSC_calculate(void);
+        void OSC_calculate(void);
         uint16_t OSC_Lerp(commonParam& instance); // 线性插值
         void OSC_update(void);
         void OSC_midiRead(void);

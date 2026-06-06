@@ -42,7 +42,7 @@ void MIDI_received_TaskInit(void)
     const osThreadAttr_t MIDI_received_TaskAttr = {
         .name = "MIDI_received_Task",
         .stack_size = 256 * 4,
-        .priority = (osPriority_t) osPriorityNormal,
+        .priority = (osPriority_t) osPriorityBelowNormal7, // 提高一个优先级
     };
     MIDI_received_TaskHandle = osThreadNew(MIDI_received_Task, NULL, &MIDI_received_TaskAttr);
 }

@@ -38,20 +38,23 @@ void OSC::OSC_Accmulate(void){  // 统一累加
 
 //  TODO: 记得改个名字
 //  TODO: 最终输出幅值和,加权$\frac{1}{16}$
-uint16_t OSC::OSC_calculate(void){  
-    float sum = 0;
-    int activeCount = 0; // 记录到底有几个通道在响
-    
-    for (commonParam& instance : oscSlot) {
-        if (instance.gate == true) { // 🌟 只有开门的通道才准加进来！
-            sum += this->OSC_Lerp(instance);
-            activeCount++;
+void OSC::OSC_calculate(void){  
+    for (int i = 0; i < HALF_BUFFER_LENGTH; i++) {
+        float sum = 0;
+        int activeCount = 0; // 记录到底有几个通道在响
+        for (commonParam& instance : oscSlot) {
+            if (instance.gate == true) { // 🌟 只有开门的通道才准加进来！
+                sum += this->OSC_Lerp(instance);
+                activeCount++;
+            }
+        }
+        this->OSC_Accmulate();
+        if (activeCount == 0){
+            this->oscBuffer[i] = 2048;
+        } else {
+            this->oscBuffer[i] = sum / (float)activeCount;
         }
     }
-    this->OSC_Accmulate();
-    
-    if (activeCount == 0) return 2048; // 全关了就返回中点
-    return sum / (float)activeCount;   // 🌟 动态加权平均，有多少算多少，绝不让死通道稀释振幅！
 }
 
 uint16_t OSC::OSC_Lerp(commonParam& instance){   //  本方法集成了累加器取值和波表取值,最终输出的是根据当前累加器取波表的结果值
@@ -76,6 +79,7 @@ void OSC::OSC_update(void){
     // this->TargetFreq = currentNote.Freq;    //  频率
     this->OSC_midiRead();
     this->OSC_StepCalculate();
+    this->OSC_calculate();
 }
 
 void OSC::OSC_midiRead(void){
