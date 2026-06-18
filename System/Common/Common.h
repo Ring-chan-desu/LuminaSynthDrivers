@@ -49,12 +49,12 @@ extern "C" {
 
 #define WAVEFORM_COUNT          3               // 波表个数:文件内部定义
 
-#define ADSR_POINT_COUNT        3               //  ADSR有效点数:文件内部定义
-#define ADSR_HEIGHT             100.0f          //  ADSR高度:文件内部定义
-#define ADSR_WIDTH              100.0f          //  ADSR宽度:文件内部定义
+// #define ADSR_POINT_COUNT        3               //  ADSR有效点数:文件内部定义    考虑弃用
+#define ADSR_HEIGHT             100.0f          //  ADSR高度:文件内部定义   未来矩阵用
+#define ADSR_WIDTH              100.0f          //  ADSR宽度:文件内部定义   未来矩阵用
 #define ADSR_PERIOD             3.0f            //  ADSR周期(秒)：控制完整 ADSR 曲线循环的默认时长（秒）。默认值 3 秒，可按需调整。
 
-#define MAX_POLY_NUM            16              //  最大复音数
+#define MAX_POLY_NUM            8               //  最大复音数
 
 #ifdef __cplusplus
     static constexpr float FM_CONSTANT      = static_cast<float>(WAVEFORM_LENGTH) / SAMPLE_RATE;                //  调频常量 能在编译阶段就被计算好

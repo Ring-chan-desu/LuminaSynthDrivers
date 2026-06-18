@@ -7,15 +7,15 @@
 #include "../System/Mediator/Mediators.h"   //  中转站
 #include "../WaveForm/WaveForm.h"   //  波表
 #include "../System/Knob/Knob.h"
-#include "stm32f4xx_hal_adc.h"
+#include "arm_math.h"
 #include <stdint.h>
 #include "../MIDI/midi-in/midiIn.h" //  MIDI
+
+float oscGeneralOutBuffer[HALF_BUFFER_LENGTH] = {0};  //  所有OSC唯一共用的缓冲区
 
 /* ---- 振荡器 ---- */
 
 void OSC::OSC_StepCalculate(void){  //  一次性全算完
-    // this->OSC_FM(CAPTURE_UPPER_LIMIT);
-    // this->Step = this->ActualFreq * FM_CONSTANT;
     for (commonParam& instance : oscSlot) {
         if (instance.gate == true) {
             instance.step = instance.targetFreq * FM_CONSTANT;
@@ -24,10 +24,6 @@ void OSC::OSC_StepCalculate(void){  //  一次性全算完
 }
 
 void OSC::OSC_Accmulate(void){  // 统一累加
-    // this->Accmulation += this->Step;
-    // if (this->Accmulation >= (float)WAVEFORM_LENGTH) {
-    //     this->Accmulation -= (float)WAVEFORM_LENGTH;
-    // }
     for (commonParam& instance : oscSlot) {
         instance.accmulation += instance.step;
         if (instance.accmulation >= (float)WAVEFORM_LENGTH) {
@@ -36,28 +32,29 @@ void OSC::OSC_Accmulate(void){  // 统一累加
     }
 }
 
-//  TODO: 记得改个名字
-//  TODO: 最终输出幅值和,加权$\frac{1}{16}$
 void OSC::OSC_calculate(void){  
-    for (int i = 0; i < HALF_BUFFER_LENGTH; i++) {
-        float sum = 0;
-        int activeCount = 0; // 记录到底有几个通道在响
-        for (commonParam& instance : oscSlot) {
-            if (instance.gate == true) { // 🌟 只有开门的通道才准加进来！
-                sum += this->OSC_Lerp(instance);
-                activeCount++;
-            }
-        }
-        this->OSC_Accmulate();
-        if (activeCount == 0){
-            this->oscBuffer[i] = 2048;
-        } else {
-            this->oscBuffer[i] = sum / (float)activeCount;
+    arm_fill_f32(0.0f, oscGeneralOutBuffer, HALF_BUFFER_LENGTH);
+    uint8_t activeCount = 0;
+    float weight = 0.0f;
+    for (commonParam& instance : oscSlot) {
+        // if (instance.gate == false) {
+        //     continue;
+        // } else {
+            activeCount++;
+        // }
+        float step = instance.step;
+        for (int i = 0; i < HALF_BUFFER_LENGTH; i++) {
+            oscGeneralOutBuffer[i] += this->OSC_Lerp(instance, step);
         }
     }
+    if (activeCount == 0) {
+        return; //  退出函数
+    }
+    weight = 1.0f / (float)activeCount;
+    arm_scale_f32(oscGeneralOutBuffer, weight, oscGeneralOutBuffer, HALF_BUFFER_LENGTH);
 }
 
-uint16_t OSC::OSC_Lerp(commonParam& instance){   //  本方法集成了累加器取值和波表取值,最终输出的是根据当前累加器取波表的结果值
+uint16_t OSC::OSC_Lerp(commonParam& instance, float step){   //  本方法集成了累加器取值和波表取值,最终输出的是根据当前累加器取波表的结果值
     uint16_t index_l = (uint16_t)instance.accmulation;
 
     uint16_t index_r = index_l + 1;
@@ -71,15 +68,16 @@ uint16_t OSC::OSC_Lerp(commonParam& instance){   //  本方法集成了累加器
     float y1 = (float)this->WaveForm[index_r];
 
     uint32_t result = (uint32_t)(y0 + frac * (y1 - y0));
+    instance.accmulation += step;
+    if (instance.accmulation >= (float)WAVEFORM_LENGTH) {
+        instance.accmulation -= (float)WAVEFORM_LENGTH;
+    }  //  线性插值之后的自动累加
     return (uint16_t)(result > 4095 ? 4095 : result); // 强制限幅
 }
 
-//  TODO: 现在频率不是公用的了,这个也得重写
 void OSC::OSC_update(void){
-    // this->TargetFreq = currentNote.Freq;    //  频率
     this->OSC_midiRead();
     this->OSC_StepCalculate();
-    this->OSC_calculate();
 }
 
 void OSC::OSC_midiRead(void){
@@ -96,7 +94,8 @@ void OSC::OSC_midiRead(void){
                 instance->targetFreq = pQueue.front().Freq;
                 instance->timestamp = pQueue.front().timestamp;
                 instance->gate = true;   //  赋值
-                instance->note = pQueue.front().note;
+                // instance->note = pQueue.front().note;
+                instance->Freq = pQueue.front().Freq;
                 pQueue.pop();
 
                 isFind = true;  //  找到了
@@ -115,31 +114,38 @@ void OSC::OSC_midiRead(void){
             instance->gate = true;
             instance->targetFreq = pQueue.front().Freq;
             instance->timestamp = pQueue.front().timestamp;   //  赋值
-            instance->note = pQueue.front().note;
+            // instance->note = pQueue.front().note;
+            instance->Freq = pQueue.front().Freq;
             pQueue.pop();
         }
-    } else {    //  下面是释放逻辑
-        for (int i = 0; i < MAX_POLY_NUM; i++) {    //  先遍历,找个同音的
-            if (this->oscSlot[i].gate == true && this->oscSlot[i].note == pQueue.front().note) {    //  同音判断
-                instance = &this->oscSlot[i];   //  随便找个同音的当擂主,把它指针传给instance
-                break;
-            }
-        }
-        for (int i = 0; i < MAX_POLY_NUM; i++) {    //  再遍历一遍,找同音的跟擂主比较
-            if (this->oscSlot[i].gate == true && this->oscSlot[i].note == pQueue.front().note) {
-                if (this->oscSlot[i].timestamp > instance->timestamp) {
-                    instance = &this->oscSlot[i];  //  找到更大的放在擂台上
+    } else {    // 下面是释放逻辑
+        bool isEmpty = true;    //  擂主空
+        
+        for (int i = 0; i < MAX_POLY_NUM; i++) {
+            // 如果当前通道满足"活着且同音"
+            // if (this->oscSlot[i].gate == true && this->oscSlot[i].note == pQueue.front().note) {
+            if (this->oscSlot[i].gate == true && this->oscSlot[i].Freq == pQueue.front().Freq) {    //  音名判断改为频率判断
+                
+                if (isEmpty == false) { // 擂台上已经有初始擂主了,开始对比时间戳
+                    if (this->oscSlot[i].timestamp > instance->timestamp) { 
+                        instance = &this->oscSlot[i];  // 找到更大的，替换擂主
+                    }
+                } else {
+                    instance = &this->oscSlot[i];
+                    isEmpty = false;
                 }
             }
         }
-        // 最后剩下来的就是最老的同音了,把他关上
-        instance->gate = false; //  先关闭
-        instance->accmulation = 0.0f;
-        instance->step = 0.0f;
-        instance->targetFreq = 0.0f;
-        instance->actualFreq = 0.0f;
-        instance->timestamp = 0; //  参数全清零
-        instance->note = 0xFFFF;    //  不可能匹配到的midi编号
-        pQueue.pop();
+        if (isEmpty == false) { // 只有真正找到了同音通道,才执行关闭
+            instance->gate = false; 
+            instance->accmulation = 0.0f;
+            instance->step = 0.0f;
+            instance->targetFreq = 0.0f;
+            instance->actualFreq = 0.0f;
+            instance->timestamp = 0; 
+            // instance->note = 0xFFFF;    
+            instance->Freq = 0.0f;
+        }
+        pQueue.pop(); // 无论找没找到,处理完当前事件后,队列都推前一个
     }
 }

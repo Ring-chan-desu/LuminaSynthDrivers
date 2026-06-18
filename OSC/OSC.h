@@ -23,15 +23,26 @@
 
 #ifdef __cplusplus
 /* --- 2. 仅 C++ 可见的类定义 --- */
-typedef struct{
+class commonParam{
+    public:
+    commonParam()
+    :
+        accmulation(0.0f),
+        step(0.0f),
+        targetFreq(440.0f), //  440Hz默认频率
+        actualFreq(0.0f),
+        Freq(0.0f),
+        timestamp(0)
+    {}
+
     float accmulation;
     float step;
     float targetFreq;
     float actualFreq;
+    float Freq;
     uint32_t timestamp;
-    uint16_t note;
     bool gate;
-}commonParam;
+};
 
 class OSC : public ParamSubscriber {
     private: // 参数名m待修改
@@ -47,18 +58,9 @@ class OSC : public ParamSubscriber {
             FM_Coeff(0.0f),
             AM_Coeff(1.0f),
             PhaseFlag(0)
-            // gate(0),
-            // Accmulation(0.0f),
-            // TargetFreq(440.0f),
-            // ActualFreq(this->TargetFreq),
-            // Step(9.386667f)
         {
-            // this->oscSlot[15] = {0.0f, 0.0f, 440.00f, 0.0f, true};
             if (m1 != nullptr) {
-                // m1->ParamMediator_Subscribe(ParamTopics::ADC_C6_Param, this); // 在这里订阅！
-                // m1->ParamMediator_Subscribe(ParamTopics::ADC_C7_Param, this); // 在这里订阅！
-                // m1->ParamParamMediator_Subscribe(ParamTopics::LFO1, this);
-                m1->ParamMediator_Subscribe(ParamTopics::MIDI_isUpdate, this);  //  订阅midi的更新频道
+
             }
 
             if (m2 != nullptr) {
@@ -67,41 +69,14 @@ class OSC : public ParamSubscriber {
         }
         /* ---- 属性 ---- */
         uint16_t* WaveForm;
-        // float Buffer[FULL_BUFFER_LENGTH];    //  OSC缓冲区,现在不需要了
-
         float FM_Coeff;
         float AM_Coeff;
-        float oscBuffer[HALF_BUFFER_LENGTH];
-
         uint8_t PhaseFlag;
         commonParam oscSlot[MAX_POLY_NUM];
-        // commonParam oscSlot[MAX_POLY_NUM] = {   //  频率这块硬编码先写死
-            // {0.0f, 0.0f, 440.00f, 0.0f, 0, true},
-            // {0.0f, 0.0f, 261.63f, 0.0f, 0, true}, // 根音 (Root)：中央C (C4) -> MIDI 编号 60
-            // {0.0f, 0.0f, 329.63f, 0.0f, 0, true}, // 三音 (Third)：大三度 E4  -> MIDI 编号 64
-            // {0.0f, 0.0f, 392.00f, 0.0f, 0, true}, // 五音 (Fifth)：纯五度 G4  -> MIDI 编号 67
-        // };
-        // uint8_t gate;
-
-        // float Accmulation;
-        // float TargetFreq;
-        // float ActualFreq;
-        // float Step;
 
         /* ---- 方法 ---- */
-        void ParamSubscriber_Update(ParamTopics t, float value) override{
-            if (t == ParamTopics::ADC_C6_Param) {  //  FM
-                this->FM_Coeff = value;
-            }
-            if (t == ParamTopics::ADC_C7_Param) {  //  AM
-                this->AM_Coeff = value;
-            }
-            // if (t == ParamTopics::LFO1) {
-            //     this->AM_Coeff *= value;
-            // }
-            if (t == ParamTopics::MIDI_isUpdate) {
+        void ParamSubscriber_Update(ParamTopics t, float value) override{   //  继承自 ParamSubscriber,考虑弃用
 
-            }
         }
         void OSC_Init(void);
         
@@ -111,7 +86,7 @@ class OSC : public ParamSubscriber {
         void OSC_StepCalculate(void);
         void OSC_Accmulate(void);
         void OSC_calculate(void);
-        uint16_t OSC_Lerp(commonParam& instance); // 线性插值
+        uint16_t OSC_Lerp(commonParam& instance, float step); // 线性插值
         void OSC_update(void);
         void OSC_midiRead(void);
 
@@ -126,9 +101,8 @@ extern "C" {
 
 /* --- 3. C/C++ 通用类型声明 --- */
 
-
 /* --- 4. 供 C 调用的公开 API (Wrapper) --- */
-
+extern float oscGeneralOutBuffer[HALF_BUFFER_LENGTH];
 // void OSCGeneralInit();
 
 #ifdef __cplusplus

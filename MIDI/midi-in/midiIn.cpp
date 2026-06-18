@@ -1,12 +1,13 @@
 #include "./midiIn.h"
 #include "usart.h"
+#include <stdalign.h>
 
-uint8_t MIDI_receiveBuffer[MIDI_BUFFER_SIZE] = {0}; 
+uint8_t MIDI_receiveBuffer[MIDI_BUFFER_SIZE] = {0}; //  串口接收缓冲区
 MIDI_stateMachine currentState = MIDI_stateMachine::IDLE;   
 midiNote currentNote;   //  当前音符
 
 // etl::list<midiNote, MIDI_POLY_SIZE> plist; //  midi复音缓冲区
-etl::queue<midiNote, 128> pQueue;   //  复音队列
+etl::queue<midiNote, MIDI_BUFFER_SIZE> pQueue;   //  指令队列
 
 uint16_t writeIndex = 0;  
 uint16_t readIndex  = 0;  
@@ -25,7 +26,7 @@ void MIDI_received_Task(void *argument)
     for(;;)
     {
         // osDelay(2); //  每隔 2ms 执行一次,process放在delay之后防止读到脏数据?
-        writeIndex = MIDI_BUFFER_SIZE - DMA1_Stream1->NDTR;   //  直接读寄存器
+        writeIndex = MIDI_BUFFER_SIZE - __HAL_DMA_GET_COUNTER(huart3.hdmarx);
         while (readIndex != writeIndex) 
         {
             uint8_t rawData = MIDI_receiveBuffer[readIndex];    //  直接取数据
@@ -70,7 +71,7 @@ void MIDI_stateMachineProcess(uint8_t data)
                 currentNote.Freq = midiLUT[currentNote.note];
                 currentNote.timestamp = HAL_GetTick();
                 pQueue.push(currentNote);
-                ParamMediator::Param_GetInstance().ParamMediator_Publish(ParamTopics::MIDI_isUpdate, 0);
+                // ParamMediator::Param_GetInstance().ParamMediator_Publish(ParamTopics::MIDI_isUpdate, 0);
                 currentState = MIDI_stateMachine::IDLE; // 松开时序到此结束,我们可以在这里给中转站发消息
             }
             break;
@@ -80,7 +81,7 @@ void MIDI_stateMachineProcess(uint8_t data)
             currentNote.Freq = midiLUT[currentNote.note];
             currentNote.timestamp = HAL_GetTick();  //  时间戳
             pQueue.push(currentNote);
-            ParamMediator::Param_GetInstance().ParamMediator_Publish(ParamTopics::MIDI_isUpdate, 0);
+            // ParamMediator::Param_GetInstance().ParamMediator_Publish(ParamTopics::MIDI_isUpdate, 0);
             currentState = MIDI_stateMachine::IDLE; 
             break;
 

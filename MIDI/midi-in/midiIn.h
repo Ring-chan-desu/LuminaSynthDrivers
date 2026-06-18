@@ -7,8 +7,7 @@
 #include "etl/queue.h"
 #include <cstdint>
 
-#define MIDI_BUFFER_SIZE 128
-#define MIDI_POLY_SIZE 16
+#define MIDI_BUFFER_SIZE 128    //  midi缓冲区大小
 /* ---- 2. C/C++ 通用类型声明 ---- */
 
 
@@ -25,7 +24,8 @@ class midiNote
 {
     public:
         midiNote()
-        :   note(0),
+        :   
+            note(0),
             velocity(0),
             channel(0),
             isNoteOnEvent(false),
