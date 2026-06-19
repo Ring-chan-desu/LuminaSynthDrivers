@@ -8,30 +8,30 @@
 #include "./Output.h"   //  自身头文件
 
 #include "../System/Interface/Lumina_Interface.h"   //  提供实例化的对象
-extern "C"{
-    #include "arm_math.h"
-}
 
 uint16_t    OutBuffer_q15[FULL_BUFFER_LENGTH] = {0};
 float       OutBuffer_f32[FULL_BUFFER_LENGTH] = {0};
 
 void Output_generalOutBufferFill(uint8_t halfFlag) {
-    // ParamMediator::GetInstance().ParamSyncBuffersInISR(); // updated to current ParamMediator singleton naming
-    OSC1.OSC_BufferFill(halfFlag);
-    // arm_copy_f32(OSC1.Buffer, OutBuffer_f32, FULL_BUFFER_LENGTH);
+    // 起点指定
+    float* startF32 = (halfFlag == 0) ? &OutBuffer_f32[0] : &OutBuffer_f32[HALF_BUFFER_LENGTH];
+    uint16_t* startQ15 = (halfFlag == 0) ? &OutBuffer_q15[0] : &OutBuffer_q15[HALF_BUFFER_LENGTH];
 
-    LFO1.LFO_BufferFill(halfFlag);
+    // 全0填充
+    arm_fill_f32(0, startF32, HALF_BUFFER_LENGTH);
 
-    ADSR1.ADSR_BufferFill(halfFlag);
-    // 如下参数动态变化,实现自由路由,通过ParamMediator订阅实现
-    // arm_mult_f32(OSC1.Buffer, LFO1.Buffer, OutBuffer_f32, FULL_BUFFER_LENGTH);  //  向量化乘法
-    // arm_mult_f32(OSC1.Buffer, ADSR1.Buffer, OutBuffer_f32, FULL_BUFFER_LENGTH);  //  向量化乘法
-    arm_copy_f32(OSC1.Buffer, OutBuffer_f32, FULL_BUFFER_LENGTH);
+    // 更新步长
+    OSC1.OSC_update();
 
-    for (uint32_t i = 0; i < FULL_BUFFER_LENGTH; i++) {   //  最后的浮点数到整数的转换
-        // ✨ 如果你需要四舍五入，直接在浮点数后面 +0.5f，然后强转 uint16_t！
-        // C++ 强转成整型时会自动把小数部分切掉，加了 0.5f 就等于完美的四舍五入！
-        OutBuffer_q15[i] = (uint16_t)(OutBuffer_f32[i] + 0.5f);
+    // 填写缓冲区
+    OSC1.OSC_calculate();
+
+    // 复制缓冲区
+    arm_copy_f32(oscGeneralOutBuffer, startF32, HALF_BUFFER_LENGTH);
+
+    // 四舍五入
+    for (uint16_t i = 0; i < HALF_BUFFER_LENGTH; i++) {
+        startQ15[i] = (uint16_t)(startF32[i] + 0.5f);
     }
 }
 

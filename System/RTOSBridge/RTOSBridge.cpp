@@ -10,8 +10,8 @@
 void Bridge_Init(void)
 {
     /* ---- From Knob ---- */
-    Knobs_Update_SemInit();
-    Knobs_Update_TaskInit();
+    // Knobs_Update_SemInit();
+    // Knobs_Update_TaskInit();
     // General_Interrupt_TaskInit();
     // General_Interrupt_SemInit();
 }

@@ -12,7 +12,7 @@
 #ifdef __cplusplus
 /* ---- 2.1 前置声明 ---- */
 class OSC;
-class ADSR;
+// class ADSR;
 class LFO;
 class Mediator;
 
