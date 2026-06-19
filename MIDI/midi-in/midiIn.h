@@ -13,11 +13,28 @@
 
 #ifdef __cplusplus
 /* ---- 3. 仅 C++ 可见的类定义 ---- */
-//  状态待补充
 enum class MIDI_stateMachine{
     IDLE = 0,
     WAITING_NOTE,
     WAITING_VELOCITY,
+};
+
+class commonParam{  //  这里借用了OSC的通用参数对象
+    public:
+    commonParam()
+    :
+        step(0.0f),
+        targetFreq(440.0f), //  440Hz默认频率
+        actualFreq(0.0f),
+        gate(false),
+        timestamp(0)
+    {}
+
+    float step;
+    float targetFreq;
+    float actualFreq;
+    bool gate;
+    uint32_t timestamp;
 };
 
 class midiNote
@@ -39,6 +56,18 @@ class midiNote
         bool        isNoteOnEvent;
         float       Freq;
         uint32_t    timestamp;
+};
+
+class voiceAllocator
+{
+    private:
+
+    public:
+        voiceAllocator() {}
+
+        commonParam paramGroup[MAX_POLY_NUM];
+
+        void voiceAllocator_midiRead();
 };
 /* 开启 C 兼容接口定义 */
 extern "C" {

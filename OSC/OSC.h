@@ -10,31 +10,32 @@
 #include "../System/Knob/Knob.h"
 #include "../WaveForm/WaveForm.h"
 #include "../MIDI/midi-in/midiIn.h"
+#include "../Interface/Lumina_Interface.h"  //  提供实例化的对象
 #include "etl/queue.h"
 #include <stdint.h>
 
 #ifdef __cplusplus
 /* --- 2. 仅 C++ 可见的类定义 --- */
-class commonParam{
-    public:
-    commonParam()
-    :
-        accmulation(0.0f),
-        step(0.0f),
-        targetFreq(440.0f), //  440Hz默认频率
-        actualFreq(0.0f),
-        Freq(0.0f),
-        timestamp(0)
-    {}
+// class commonParam{
+//     public:
+//     commonParam()
+//     :
+//         accmulation(0.0f),
+//         step(0.0f),
+//         targetFreq(440.0f), //  440Hz默认频率
+//         actualFreq(0.0f),
+//         Freq(0.0f),
+//         timestamp(0)
+//     {}
 
-    float accmulation;
-    float step;
-    float targetFreq;
-    float actualFreq;
-    float Freq;
-    uint32_t timestamp;
-    bool gate;
-};
+//     float accmulation;
+//     float step;
+//     float targetFreq;
+//     float actualFreq;
+//     float Freq;
+//     uint32_t timestamp;
+//     bool gate;
+// };
 
 class OSC : public ParamSubscriber {
     private: // 参数名m待修改
@@ -47,7 +48,7 @@ class OSC : public ParamSubscriber {
         :   m1(Med1),
             m2(Med2),
             WaveForm((uint16_t*)WaveFormList[0]),
-            in_oscFM(1.0f),
+            in_oscFM(0.0f),
             in_oscAM(1.0f)
         {
             if (m1 != nullptr) {
@@ -63,7 +64,9 @@ class OSC : public ParamSubscriber {
         float in_oscFM; //  OSC各通道共有参数
         float in_oscAM; //  OSC各通道共有参数
         float out_oscOut[MAX_POLY_NUM];
-        commonParam oscSlot[MAX_POLY_NUM];
+        // commonParam oscSlot[MAX_POLY_NUM];
+        float oscAccmulators[MAX_POLY_NUM];
+        float oscSteps[MAX_POLY_NUM];
 
         /* ---- 方法 ---- */
         void ParamSubscriber_Update(ParamTopics t, float value) override{   //  继承自 ParamSubscriber,考虑弃用
@@ -77,9 +80,7 @@ class OSC : public ParamSubscriber {
         void OSC_StepCalculate(void);
         void OSC_Accmulate(void);
         void OSC_calculate(void);
-        uint16_t OSC_Lerp(commonParam& instance, float step); // 线性插值
         void OSC_update(void);
-        void OSC_midiRead(void);
 
         void OSC_WaveFormSelect(uint8_t WaveFormIndex); //  待完善
 
