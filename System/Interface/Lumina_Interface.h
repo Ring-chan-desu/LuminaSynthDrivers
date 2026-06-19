@@ -12,7 +12,7 @@
 #ifdef __cplusplus
 /* ---- 2.1 前置声明 ---- */
 class OSC;
-// class ADSR;
+// class ADSR;  //  这个类还没有定义
 class LFO;
 class Mediator;
 
@@ -25,10 +25,6 @@ extern "C" {
 
 /* ---- 4. 供 C 调用的公开 API (Wrapper) ---- */
 void Lumina_Interface_Init(void);
-
-float* Lumina_Interface_GetOutBuffer(void);
-
-float Lumina_Interface_ADSR_GetValue(float CurrentX);  //  测试函数
 
 #ifdef __cplusplus
 } // 结束 extern "C"
