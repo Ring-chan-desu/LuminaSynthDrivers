@@ -4,6 +4,7 @@
 #include "../System/Mediator/Mediators.h"    // Mediator类
 #include "../ADSR/ADSR.h"   // ADSR类方法
 #include "../LFO/LFO.h" // LFO类方法
+#include "../WaveForm/WaveForm.h"
 
 #include "./Output.h"   //  自身头文件
 
@@ -13,6 +14,11 @@ uint16_t    OutBuffer_q15[FULL_BUFFER_LENGTH] = {0};
 float       OutBuffer_f32[FULL_BUFFER_LENGTH] = {0};
 
 void Output_generalOutBufferFill(uint8_t halfFlag) {
+    // 测试用代码,OSC2调频
+    OSC2.in_oscFM = 0.5f;
+    OSC2.in_oscAM = 0.3f;
+    OSC2.WaveForm = (uint16_t*)WaveFormList[1];
+
     // 起点指定
     float* startF32 = (halfFlag == 0) ? &OutBuffer_f32[0] : &OutBuffer_f32[HALF_BUFFER_LENGTH];
     uint16_t* startQ15 = (halfFlag == 0) ? &OutBuffer_q15[0] : &OutBuffer_q15[HALF_BUFFER_LENGTH];
@@ -20,11 +26,18 @@ void Output_generalOutBufferFill(uint8_t halfFlag) {
     // 全0填充
     arm_fill_f32(0, startF32, HALF_BUFFER_LENGTH);
 
-    // 更新步长
-    OSC1.OSC_update();
+    // 全0填充 OSC系统缓冲区
+    arm_fill_f32(0.0f, oscGeneralOutBuffer, HALF_BUFFER_LENGTH);
 
-    // 填写缓冲区
+    // MIDI消费
+    voiceAllocator1.voiceAllocator_midiRead();
+
+    // 累加逻辑
+    OSC1.OSC_update();
     OSC1.OSC_calculate();
+
+    OSC2.OSC_update();
+    OSC2.OSC_calculate();
 
     // 复制缓冲区
     arm_copy_f32(oscGeneralOutBuffer, startF32, HALF_BUFFER_LENGTH);

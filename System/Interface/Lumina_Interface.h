@@ -11,13 +11,16 @@
 
 #ifdef __cplusplus
 /* ---- 2.1 前置声明 ---- */
+class voiceAllocator;
 class OSC;
 // class ADSR;  //  这个类还没有定义
 class LFO;
 class Mediator;
 
 /* ---- 3. 仅 C++ 可见的类定义 ---- */
+extern voiceAllocator voiceAllocator1;
 extern OSC OSC1;
+extern OSC OSC2;
 extern LFO LFO1;
 /* 开启 C 兼容接口定义 */
 extern "C" {

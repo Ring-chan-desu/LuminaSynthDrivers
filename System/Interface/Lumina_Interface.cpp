@@ -3,11 +3,14 @@
 #include "../System/Mediator/Mediators.h"
 #include "../ADSR/ADSR.h"
 #include "../LFO/LFO.h"
+#include "../MIDI/midi-in/midiIn.h"
 
 /* ---- 实例化 ---- */
 
+voiceAllocator voiceAllocator1;
+
 OSC OSC1(&(ParamMediator::Param_GetInstance()), nullptr);
-// OSC OSC2(&(ParamMediator::Param_GetInstance()), nullptr);
+OSC OSC2(&(ParamMediator::Param_GetInstance()), nullptr);
 
 LFO LFO1(&(ParamMediator::Param_GetInstance()), nullptr);
 
