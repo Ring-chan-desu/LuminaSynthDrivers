@@ -6,20 +6,12 @@
 #include "ParamMediator.h"
 #include "dac.h"
 
-// #include "main.h" // Moved to Common.h
-// #include "../System/Interface/Lumina_Interface.h" // Redundant dependency; common includes are centralized in Common.h
 #include "../System/Mediator/Mediators.h"
 #include "../System/Knob/Knob.h"
 #include "../WaveForm/WaveForm.h"
 #include "../MIDI/midi-in/midiIn.h"
 #include "etl/queue.h"
 #include <stdint.h>
-
-// #include <stdint.h> // Moved to Common.h
-
-// #define SAMPLE_RATE             48000                               // 采样率
-// #define HALF_BUFFER_LENGTH      256                                 // 半缓冲区长度
-// #define FULL_BUFFER_LENGTH      512   
 
 #ifdef __cplusplus
 /* --- 2. 仅 C++ 可见的类定义 --- */
@@ -55,9 +47,8 @@ class OSC : public ParamSubscriber {
         :   m1(Med1),
             m2(Med2),
             WaveForm((uint16_t*)WaveFormList[0]),
-            FM_Coeff(0.0f),
-            AM_Coeff(1.0f),
-            PhaseFlag(0)
+            in_oscFM(1.0f),
+            in_oscAM(1.0f)
         {
             if (m1 != nullptr) {
 
@@ -69,9 +60,9 @@ class OSC : public ParamSubscriber {
         }
         /* ---- 属性 ---- */
         uint16_t* WaveForm;
-        float FM_Coeff;
-        float AM_Coeff;
-        uint8_t PhaseFlag;
+        float in_oscFM; //  OSC各通道共有参数
+        float in_oscAM; //  OSC各通道共有参数
+        float out_oscOut[MAX_POLY_NUM];
         commonParam oscSlot[MAX_POLY_NUM];
 
         /* ---- 方法 ---- */

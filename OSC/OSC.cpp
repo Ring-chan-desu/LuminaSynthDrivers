@@ -16,9 +16,11 @@ float oscGeneralOutBuffer[HALF_BUFFER_LENGTH] = {0};  //  所有OSC唯一共用�
 /* ---- 振荡器 ---- */
 
 void OSC::OSC_StepCalculate(void){  //  一次性全算完
+    float fmFactor = this->in_oscFM;    //  锁存调频参数
     for (commonParam& instance : oscSlot) {
         if (instance.gate == true) {
-            instance.step = instance.targetFreq * FM_CONSTANT;
+            instance.actualFreq = instance.targetFreq * (1 + fmFactor);   //  调频
+            instance.step = instance.actualFreq * FM_CONSTANT;
         }
     }
 }
@@ -36,6 +38,7 @@ void OSC::OSC_calculate(void){
     arm_fill_f32(0.0f, oscGeneralOutBuffer, HALF_BUFFER_LENGTH);
     uint8_t activeCount = 0;
     float weight = 0.0f;
+    float amFactor = this->in_oscAM;
     for (commonParam& instance : oscSlot) {
         // if (instance.gate == false) {
         //     continue;
@@ -44,7 +47,7 @@ void OSC::OSC_calculate(void){
         // }
         float step = instance.step;
         for (int i = 0; i < HALF_BUFFER_LENGTH; i++) {
-            oscGeneralOutBuffer[i] += this->OSC_Lerp(instance, step);
+            oscGeneralOutBuffer[i] += this->OSC_Lerp(instance, step)*amFactor;   //  最终输出的幅值
         }
     }
     if (activeCount == 0) {
@@ -80,7 +83,7 @@ void OSC::OSC_update(void){
     this->OSC_StepCalculate();
 }
 
-void OSC::OSC_midiRead(void){
+void OSC::OSC_midiRead(void){   //  OSC和MIDI强耦合
     if (pQueue.empty()) {
         return; //  空队列直接不看了,拜拜了您内
     }
