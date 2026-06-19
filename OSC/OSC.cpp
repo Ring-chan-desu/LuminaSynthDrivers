@@ -47,7 +47,7 @@ void OSC::OSC_calculate(void){
         // }
         float step = instance.step;
         for (int i = 0; i < HALF_BUFFER_LENGTH; i++) {
-            oscGeneralOutBuffer[i] += this->OSC_Lerp(instance, step)*amFactor;   //  最终输出的幅值
+            oscGeneralOutBuffer[i] += (this->OSC_Lerp(instance, step)*amFactor)*0.5f;   //  最终输出的幅值,先硬编码写死除2
         }
     }
     if (activeCount == 0) {
@@ -106,14 +106,14 @@ void OSC::OSC_midiRead(void){   //  OSC和MIDI强耦合
             }
         }
 
-        if (!isFind) {  //  没找到空闲的就找时间戳最大的然后直接切掉
+        if (!isFind) {  //  没找到空闲的就找时间戳最小的然后直接切掉
             instance = &this->oscSlot[0];    //  先给0号元素提取出来
             for (int i = 1; i < MAX_POLY_NUM; i++) {    //  依次检查其他元素
-                if (this->oscSlot[i].timestamp > instance->timestamp) {    //  如果当前元素的时间戳比前面的时间戳大,那么就丢到擂台上当擂主
+                if (this->oscSlot[i].timestamp < instance->timestamp) {    //  如果当前元素的时间戳比前面的时间戳小,那么就丢到擂台上当擂主
                     instance = &this->oscSlot[i]; //  更新指针
                 }
             }
-            //  最后指针所指的就是时间戳最大的那个元素
+            //  最后指针所指的就是时间戳最小的那个元素
             instance->gate = true;
             instance->targetFreq = pQueue.front().Freq;
             instance->timestamp = pQueue.front().timestamp;   //  赋值
@@ -130,7 +130,7 @@ void OSC::OSC_midiRead(void){   //  OSC和MIDI强耦合
             if (this->oscSlot[i].gate == true && this->oscSlot[i].Freq == pQueue.front().Freq) {    //  音名判断改为频率判断
                 
                 if (isEmpty == false) { // 擂台上已经有初始擂主了,开始对比时间戳
-                    if (this->oscSlot[i].timestamp > instance->timestamp) { 
+                    if (this->oscSlot[i].timestamp < instance->timestamp) { 
                         instance = &this->oscSlot[i];  // 找到更大的，替换擂主
                     }
                 } else {
