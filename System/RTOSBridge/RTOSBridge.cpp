@@ -5,6 +5,7 @@
 /* ----Modules & Semaphores Files Includes---- */
 #include "../System/Knob/Knob.h"
 #include "../LFO/LFO.h"
+#include "../../MIDI/midi-in/midiIn.h"
 
 /* ----Modules & Semaphores Bridge Functions---- */
 void Bridge_Init(void)
@@ -14,4 +15,7 @@ void Bridge_Init(void)
     // Knobs_Update_TaskInit();
     // General_Interrupt_TaskInit();
     // General_Interrupt_SemInit();
+
+    /* ---- From MIDI ---- */
+    MIDI_received_TaskInit();
 }
